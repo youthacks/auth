@@ -16,10 +16,12 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
+          # use the Ruby version file inside the backend folder
+          ruby-version: backend/.ruby-version
           bundler-cache: true
 
       - name: Scan for common Rails security vulnerabilities using static analysis
+        working-directory: backend
         run: bin/brakeman --no-pager
 
   lint:
@@ -31,10 +33,12 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
+          # use the Ruby version file inside the backend folder
+          ruby-version: backend/.ruby-version
           bundler-cache: true
 
       - name: Lint code for consistent style
+        working-directory: backend
         run: bin/rubocop -f github
 
   test:
@@ -66,7 +70,8 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
+          # use the Ruby version file inside the backend folder
+          ruby-version: backend/.ruby-version
           bundler-cache: true
 
       - name: Run tests
@@ -74,4 +79,5 @@ jobs:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
           # REDIS_URL: redis://localhost:6379/0
+        working-directory: backend
         run: bin/rails db:test:prepare test
