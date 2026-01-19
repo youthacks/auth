@@ -34,7 +34,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_19_001000) do
     t.string "ip_address"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["user_id"], name: "index_refresh_tokens_on_user_id"
+    t.index [ "user_id" ], name: "index_refresh_tokens_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -48,8 +48,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_19_001000) do
     t.datetime "locked_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["username"], name: "index_users_on_username", unique: true
+    t.index [ "email" ], name: "index_users_on_email", unique: true
+    t.index [ "username" ], name: "index_users_on_username", unique: true
   end
 
   add_foreign_key "refresh_tokens", "users"
