@@ -7,6 +7,6 @@ class UserMailer < ApplicationMailer
   def verification_code
     @code = params[:code]
     @expires_in = params[:expires_in] || 15 # default to 15 minutes
-    mail(to: params[:email], subject: "Your verification code")
+    mail(to: params[:email], subject: "Youthacks Auth Verification Code - #{@code}")
   end
 end
