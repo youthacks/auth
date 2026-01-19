@@ -49,4 +49,3 @@ end
 # Other gems
 
 gem "jwt"
-gem "rack-cors"
