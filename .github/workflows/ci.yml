@@ -11,13 +11,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           # use the Ruby version file inside the backend folder
-          ruby-version: backend/.ruby-version
+          ruby-version: 3.4.3
           bundler-cache: true
           working-directory: backend
 
@@ -29,13 +29,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           # use the Ruby version file inside the backend folder
-          ruby-version: backend/.ruby-version
+          ruby-version: 3.4.3
           bundler-cache: true
           working-directory: backend
 
@@ -67,13 +67,13 @@ jobs:
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config
 
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           # use the Ruby version file inside the backend folder
-          ruby-version: backend/.ruby-version
+          ruby-version: 3.4.3
           bundler-cache: true
           working-directory: backend
 
