@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  email: MyString
+  code_digest: MyString
+  expires_at: 2026-01-16 16:01:48
+  used_at: 2026-01-16 16:01:48
+
+two:
+  email: MyString
+  code_digest: MyString
+  expires_at: 2026-01-16 16:01:48
+  used_at: 2026-01-16 16:01:48
