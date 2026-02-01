@@ -93,9 +93,19 @@ class AuthController < ApplicationController
       User.find_by(username: normalized)
     end
 
+    user&.unlock_if_expired!
+
+    if user&.locked?
+      return render json: { error: "Account locked due to too many failed attempts" }, status: :locked
+    end
+
     if user.nil? || !user.authenticate(password)
+      user&.register_failed_login!
       return render json: { error: "Invalid email/username or password" }, status: :unauthorized
     end
+
+    user.reset_failed_logins!
+    user.update!(last_login_at: Time.current)
 
     refresh_token = RefreshToken.issue_for(user, request)
 
