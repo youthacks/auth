@@ -1,0 +1,2 @@
+class SamlController < ApplicationController
+end
