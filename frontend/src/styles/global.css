@@ -1,0 +1,68 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-satoshi: var(--font-satoshi);
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  body {
+    font-feature-settings: "ss01";
+  }
+
+  body > * {
+    @apply tracking-tight;
+  }
+}
+
+@utility bg-dots {
+  background-image: url("/patterns/dots.svg");
+  background-position: center;
+}
+
+@utility bg-footer-dots {
+  background-image: radial-gradient(
+    rgb(255 255 255 / 0.02) 2px,
+    transparent 0px
+  );
+  background-size: 24px 24px;
+  background-position: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-slide-up {
+    opacity: 0;
+    animation: slide-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes slide-up {
+    0% {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up-blur {
+    opacity: 0;
+    animation: slide-up-blur 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes slide-up-blur {
+    0% {
+      opacity: 0;
+      transform: translateY(24px);
+      filter: blur(4px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0px);
+    }
+  }
+}

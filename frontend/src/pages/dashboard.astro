@@ -1,0 +1,72 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Dashboard">
+  <div class="min-h-screen p-8">
+    <div class="mx-auto max-w-4xl">
+      <div class="rounded-xl border border-neutral-300 bg-white p-8 shadow-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="font-satoshi text-3xl font-bold">Dashboard</h1>
+            <p id="welcome" class="mt-2 text-neutral-600">Welcome back!</p>
+          </div>
+          <button
+            id="logout-btn"
+            class="rounded-lg border border-neutral-300 px-4 py-2 font-semibold text-neutral-700 transition hover:bg-neutral-50"
+          >
+            Logout
+          </button>
+        </div>
+
+        <div id="user-info" class="mt-8 space-y-4 rounded-lg border border-neutral-200 bg-neutral-50 p-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm font-semibold text-neutral-500">Name</p>
+              <p id="name" class="mt-1 text-lg">-</p>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-neutral-500">Username</p>
+              <p id="username" class="mt-1 text-lg">-</p>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-neutral-500">Email</p>
+              <p id="email" class="mt-1 text-lg">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { api } from "../lib/api";
+
+  const logoutBtn = document.getElementById("logout-btn") as HTMLButtonElement;
+  const welcomeP = document.getElementById("welcome") as HTMLParagraphElement;
+  const nameP = document.getElementById("name") as HTMLParagraphElement;
+  const usernameP = document.getElementById("username") as HTMLParagraphElement;
+  const emailP = document.getElementById("email") as HTMLParagraphElement;
+
+  // Check if user is logged in
+  if (!api.isAuthenticated()) {
+    window.location.href = "/login";
+  } else {
+    const user = api.getUser();
+    if (user) {
+      welcomeP.textContent = `Welcome back, ${user.preferred_name || user.first_name}!`;
+      nameP.textContent = `${user.first_name} ${user.last_name}`;
+      usernameP.textContent = user.username;
+      emailP.textContent = user.email;
+    }
+  }
+
+  logoutBtn.addEventListener("click", async () => {
+    logoutBtn.disabled = true;
+    logoutBtn.textContent = "Logging out...";
+
+    await api.logout();
+    window.location.href = "/login";
+  });
+</script>

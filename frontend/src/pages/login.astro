@@ -1,0 +1,105 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Login">
+  <div class="flex min-h-screen items-center justify-center p-8">
+    <div class="w-full max-w-md">
+      <div class="rounded-xl border border-neutral-300 bg-white p-8 shadow-sm">
+        <h1 class="font-satoshi text-3xl font-bold">Welcome back</h1>
+        <p class="mt-2 text-neutral-600">Sign in to your account</p>
+
+        <div id="error" class="mt-4 hidden rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800"></div>
+        <div id="success" class="mt-4 hidden rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-800"></div>
+
+        <form id="login-form" class="mt-6 space-y-4">
+          <div>
+            <label for="identifier" class="block text-sm font-semibold text-neutral-700">
+              Email or Username
+            </label>
+            <input
+              type="text"
+              id="identifier"
+              name="identifier"
+              required
+              class="mt-1 w-full rounded-lg border border-neutral-300 px-4 py-2 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+              placeholder="Enter your email or username"
+            />
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm font-semibold text-neutral-700">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              class="mt-1 w-full rounded-lg border border-neutral-300 px-4 py-2 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+              placeholder="Enter your password"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="w-full rounded-lg bg-red-800 py-3 font-semibold text-white transition hover:bg-red-900"
+          >
+            Sign in
+          </button>
+        </form>
+
+        <div class="mt-6 text-center text-sm text-neutral-600">
+          Don't have an account?
+          <a href="/signup" class="font-semibold text-red-800 underline-offset-2 transition hover:text-red-900 hover:underline">
+            Sign up
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { api } from "../lib/api";
+
+  // Redirect if already logged in
+  if (api.isAuthenticated()) {
+    window.location.href = "/dashboard";
+  }
+
+  const form = document.getElementById("login-form") as HTMLFormElement;
+  const errorDiv = document.getElementById("error") as HTMLDivElement;
+  const successDiv = document.getElementById("success") as HTMLDivElement;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const identifier = formData.get("identifier") as string;
+    const password = formData.get("password") as string;
+
+    errorDiv.classList.add("hidden");
+    successDiv.classList.add("hidden");
+
+    const button = form.querySelector("button[type=submit]") as HTMLButtonElement;
+    button.disabled = true;
+    button.textContent = "Signing in...";
+
+    const response = await api.login(identifier, password);
+
+    button.disabled = false;
+    button.textContent = "Sign in";
+
+    if (response.error) {
+      errorDiv.textContent = response.error;
+      errorDiv.classList.remove("hidden");
+    } else {
+      successDiv.textContent = "Login successful! Redirecting...";
+      successDiv.classList.remove("hidden");
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1000);
+    }
+  });
+</script>

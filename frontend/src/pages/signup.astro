@@ -1,0 +1,176 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Sign Up">
+  <div class="flex min-h-screen items-center justify-center p-8">
+    <div class="w-full max-w-md">
+      <div class="rounded-xl border border-neutral-300 bg-white p-8 shadow-sm">
+        <h1 class="font-satoshi text-3xl font-bold">Create an account</h1>
+        <p class="mt-2 text-neutral-600">Get started with Youthacks</p>
+
+        <div id="error" class="mt-4 hidden rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800"></div>
+        <div id="success" class="mt-4 hidden rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-800"></div>
+
+        <form id="signup-form" class="mt-6 space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="first_name" class="block text-sm font-semibold text-neutral-700">
+                First Name
+              </label>
+              <input
+                type="text"
+                id="first_name"
+                name="first_name"
+                required
+                class="mt-1 w-full rounded-lg border border-neutral-300 px-4 py-2 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+              />
+            </div>
+            <div>
+              <label for="last_name" class="block text-sm font-semibold text-neutral-700">
+                Last Name
+              </label>
+              <input
+                type="text"
+                id="last_name"
+                name="last_name"
+                required
+                class="mt-1 w-full rounded-lg border border-neutral-300 px-4 py-2 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label for="preferred_name" class="block text-sm font-semibold text-neutral-700">
+              Preferred Name <span class="text-neutral-500">(optional)</span>
+            </label>
+            <input
+              type="text"
+              id="preferred_name"
+              name="preferred_name"
+              class="mt-1 w-full rounded-lg border border-neutral-300 px-4 py-2 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+            />
+          </div>
+
+          <div>
+            <label for="username" class="block text-sm font-semibold text-neutral-700">
+              Username
+            </label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              required
+              class="mt-1 w-full rounded-lg border border-neutral-300 px-4 py-2 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+            />
+          </div>
+
+          <div>
+            <label for="email" class="block text-sm font-semibold text-neutral-700">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              class="mt-1 w-full rounded-lg border border-neutral-300 px-4 py-2 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+            />
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm font-semibold text-neutral-700">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              class="mt-1 w-full rounded-lg border border-neutral-300 px-4 py-2 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+            />
+          </div>
+
+          <div>
+            <label for="password_confirmation" class="block text-sm font-semibold text-neutral-700">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              id="password_confirmation"
+              name="password_confirmation"
+              required
+              class="mt-1 w-full rounded-lg border border-neutral-300 px-4 py-2 transition focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="w-full rounded-lg bg-red-800 py-3 font-semibold text-white transition hover:bg-red-900"
+          >
+            Create account
+          </button>
+        </form>
+
+        <div class="mt-6 text-center text-sm text-neutral-600">
+          Already have an account?
+          <a href="/login" class="font-semibold text-red-800 underline-offset-2 transition hover:text-red-900 hover:underline">
+            Sign in
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { api } from "../lib/api";
+
+  // Redirect if already logged in
+  if (api.isAuthenticated()) {
+    window.location.href = "/dashboard";
+  }
+
+  const form = document.getElementById("signup-form") as HTMLFormElement;
+  const errorDiv = document.getElementById("error") as HTMLDivElement;
+  const successDiv = document.getElementById("success") as HTMLDivElement;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const data = {
+      first_name: formData.get("first_name") as string,
+      last_name: formData.get("last_name") as string,
+      preferred_name: formData.get("preferred_name") as string,
+      username: formData.get("username") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      password_confirmation: formData.get("password_confirmation") as string,
+    };
+
+    errorDiv.classList.add("hidden");
+    successDiv.classList.add("hidden");
+
+    const button = form.querySelector("button[type=submit]") as HTMLButtonElement;
+    button.disabled = true;
+    button.textContent = "Creating account...";
+
+    const response = await api.signup(data);
+
+    button.disabled = false;
+    button.textContent = "Create account";
+
+    if (response.error || response.errors) {
+      errorDiv.textContent = response.error || response.errors?.join(", ") || "Signup failed";
+      errorDiv.classList.remove("hidden");
+    } else {
+      successDiv.textContent = "Verification code sent! Redirecting...";
+      successDiv.classList.remove("hidden");
+      localStorage.setItem("signup_email", data.email);
+      setTimeout(() => {
+        window.location.href = "/verify";
+      }, 1500);
+    }
+  });
+</script>

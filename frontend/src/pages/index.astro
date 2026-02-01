@@ -1,0 +1,31 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Youthacks Auth">
+  <div class="flex min-h-screen items-center justify-center p-8">
+    <div class="w-full max-w-2xl text-center">
+      <h1 class="font-satoshi text-5xl font-black tracking-tighter sm:text-6xl">
+        <span class="text-red-800">Youthacks</span> Auth
+      </h1>
+      <p class="mt-4 text-lg text-neutral-600 sm:text-xl">
+        Authentication for Youthacks events and services
+      </p>
+
+      <div class="mt-8 flex flex-wrap justify-center gap-4">
+        <a
+          href="/login"
+          class="flex h-12 items-center gap-2 rounded-full bg-red-800 px-6 font-semibold text-white shadow-sm transition hover:bg-red-900"
+        >
+          <span>Sign in</span>
+        </a>
+        <a
+          href="/signup"
+          class="flex h-12 items-center gap-2 rounded-full border-2 border-red-800 px-6 font-semibold text-red-800 transition hover:bg-red-800 hover:text-white"
+        >
+          <span>Create account</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>
