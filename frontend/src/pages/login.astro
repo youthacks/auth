@@ -42,6 +42,14 @@ import Layout from "../layouts/Layout.astro";
           </div>
 
           <button
+            type="button"
+            id="forgot-password"
+            class="text-left text-sm font-semibold text-red-800 underline-offset-2 transition hover:text-red-900 hover:underline"
+          >
+            Forgot password?
+          </button>
+
+          <button
             type="submit"
             class="w-full rounded-lg bg-red-800 py-3 font-semibold text-white transition hover:bg-red-900"
           >
@@ -71,6 +79,41 @@ import Layout from "../layouts/Layout.astro";
   const form = document.getElementById("login-form") as HTMLFormElement;
   const errorDiv = document.getElementById("error") as HTMLDivElement;
   const successDiv = document.getElementById("success") as HTMLDivElement;
+  const forgotButton = document.getElementById("forgot-password") as HTMLButtonElement;
+
+  forgotButton.addEventListener("click", async () => {
+    const identifierInput = document.getElementById("identifier") as HTMLInputElement;
+    const identifier = identifierInput.value.trim();
+
+    errorDiv.classList.add("hidden");
+    successDiv.classList.add("hidden");
+
+    if (!identifier) {
+      errorDiv.textContent = "Enter your email or username first.";
+      errorDiv.classList.remove("hidden");
+      return;
+    }
+
+    forgotButton.disabled = true;
+    forgotButton.textContent = "Generating code...";
+
+    const response = await api.forgotPassword(identifier);
+
+    forgotButton.disabled = false;
+    forgotButton.textContent = "Forgot password?";
+
+    if (response.error) {
+      errorDiv.textContent = response.error;
+      errorDiv.classList.remove("hidden");
+      return;
+    }
+
+    const code = response.data?.code;
+    errorDiv.textContent = code
+      ? `Development mode: reset code is ${code}`
+      : "If the account exists, a reset code was generated.";
+    errorDiv.classList.remove("hidden");
+  });
 
   form.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {

@@ -92,6 +92,32 @@ class AuthController < ApplicationController
     end
   end
 
+  def forgot_password
+    identifier = params[:identifier].presence || params[:email].to_s
+
+    if identifier.blank?
+      return render json: { error: "Email or username is required" }, status: :unprocessable_entity
+    end
+
+    unless Rails.env.development?
+      return render json: { error: "Forgot password is available only in development" }, status: :not_implemented
+    end
+
+    normalized = identifier.strip.downcase
+    user = if normalized.match?(URI::MailTo::EMAIL_REGEXP)
+      User.find_by(email: normalized)
+    else
+      User.find_by(username: normalized)
+    end
+
+    code = format("%06d", SecureRandom.random_number(1_000_000))
+
+    render json: {
+      message: "Development reset code generated",
+      code: user ? code : nil
+    }, status: :ok
+  end
+
   def login
     identifier = params[:identifier].presence || params[:email].to_s
     password = params[:password].to_s

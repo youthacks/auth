@@ -128,6 +128,13 @@ class ApiClient {
     return response;
   }
 
+  async forgotPassword(identifier: string) {
+    return this.request<{ message: string; code?: string | null }>('/v1/auth/forgot_password', {
+      method: 'POST',
+      body: JSON.stringify({ identifier }),
+    });
+  }
+
   async refresh() {
     if (!this.refreshToken) {
       return { error: 'No refresh token available' };

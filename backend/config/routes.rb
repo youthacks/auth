@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     post "auth/signup", to: "auth#signup"
     post "auth/login", to: "auth#login"
     post "auth/logout", to: "auth#logout"
+    post "auth/forgot_password", to: "auth#forgot_password"
     post "auth/resend_email_verification", to: "auth#resend_email_verification"
     post "auth/verify_email", to: "auth#verify_email"
   end
