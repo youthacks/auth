@@ -49,3 +49,4 @@ end
 # Other gems
 
 gem "jwt"
+gem "saml_idp"

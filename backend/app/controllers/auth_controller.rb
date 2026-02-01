@@ -148,6 +148,15 @@ class AuthController < ApplicationController
     user.update!(last_login_at: Time.current)
 
     refresh_token = RefreshToken.issue_for(user, request)
+    idp_session = issue_idp_session(user)
+
+    cookies.encrypted[:idp_session] = {
+      value: idp_session,
+      httponly: true,
+      same_site: :lax,
+      secure: Rails.env.production?,
+      expires: 1.day.from_now
+    }
 
     render json: {
       user: user_payload(user),
@@ -170,6 +179,8 @@ class AuthController < ApplicationController
     end
 
     record.revoke!
+
+    cookies.delete(:idp_session)
 
     render json: { message: "Logged out" }, status: :ok
   end

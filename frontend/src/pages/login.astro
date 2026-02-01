@@ -81,6 +81,23 @@ import Layout from "../layouts/Layout.astro";
   const successDiv = document.getElementById("success") as HTMLDivElement;
   const forgotButton = document.getElementById("forgot-password") as HTMLButtonElement;
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const samlRequest = urlParams.get("SAMLRequest");
+  const relayState = urlParams.get("RelayState");
+  const returnTo = urlParams.get("return_to");
+
+  if (returnTo) {
+    const target = new URL(returnTo, window.location.origin);
+    const targetParams = target.searchParams;
+    if (!targetParams.get("SAMLRequest") && samlRequest) {
+      targetParams.set("SAMLRequest", samlRequest);
+    }
+    if (!targetParams.get("RelayState") && relayState) {
+      targetParams.set("RelayState", relayState);
+    }
+    window.location.href = target.toString();
+  }
+
   forgotButton.addEventListener("click", async () => {
     const identifierInput = document.getElementById("identifier") as HTMLInputElement;
     const identifier = identifierInput.value.trim();
@@ -145,6 +162,13 @@ import Layout from "../layouts/Layout.astro";
       errorDiv.textContent = response.error;
       errorDiv.classList.remove("hidden");
     } else {
+      const apiBase = (import.meta.env.PUBLIC_API_URL || "").replace(/\/$/, "");
+      if (samlRequest && relayState) {
+        const redirectUrl = `${apiBase}/v1/idp/sso?SAMLRequest=${encodeURIComponent(samlRequest)}&RelayState=${encodeURIComponent(relayState)}`;
+        window.location.href = redirectUrl;
+        return;
+      }
+
       successDiv.textContent = "Login successful! Redirecting...";
       successDiv.classList.remove("hidden");
       setTimeout(() => {
