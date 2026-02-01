@@ -1,5 +1,4 @@
 const API_URL = import.meta.env.PUBLIC_API_URL || '/';
-
 interface ApiResponse<T = any> {
   data?: T;
   error?: string;
@@ -116,7 +115,7 @@ class ApiClient {
       refresh_token: string;
     }>('/v1/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email: identifier, password }),
+      body: JSON.stringify({ identifier, password }),
     });
 
     if (response.data) {

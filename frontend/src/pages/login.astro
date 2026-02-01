@@ -72,6 +72,13 @@ import Layout from "../layouts/Layout.astro";
   const errorDiv = document.getElementById("error") as HTMLDivElement;
   const successDiv = document.getElementById("success") as HTMLDivElement;
 
+  form.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
