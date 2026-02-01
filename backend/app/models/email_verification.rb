@@ -3,6 +3,9 @@ require "digest"
 class EmailVerification < ApplicationRecord
   TTL = 10.minutes
   MAX_ATTEMPTS = 5
+  MAX_SENDS_PER_WINDOW = 5
+  SEND_WINDOW = 1.hour
+  MIN_SEND_INTERVAL = 1.minute
 
   validates :email, :code_digest, :expires_at, :payload, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
@@ -13,15 +16,49 @@ class EmailVerification < ApplicationRecord
     normalized = normalize_email(email)
     raw_code = format("%06d", SecureRandom.random_number(1_000_000))
     record = nil
+    now = Time.current
 
     transaction do
-      where(email: normalized).delete_all
-      record = create!(
-        email: normalized,
-        code_digest: digest(raw_code),
-        expires_at: TTL.from_now,
-        payload: payload
-      )
+      record = where(email: normalized).order(created_at: :desc).first
+
+      if record
+        window_start = record.sent_window_started_at || record.created_at || now
+        if window_start <= SEND_WINDOW.ago
+          window_start = now
+          sent_count = 0
+        else
+          sent_count = record.sent_count.to_i
+        end
+
+        if record.last_sent_at.present? && record.last_sent_at > MIN_SEND_INTERVAL.ago
+          return :rate_limited
+        end
+
+        if sent_count >= MAX_SENDS_PER_WINDOW
+          return :rate_limited
+        end
+
+        record.update!(
+          code_digest: digest(raw_code),
+          expires_at: TTL.from_now,
+          payload: payload,
+          used_at: nil,
+          failed_attempts: 0,
+          last_sent_at: now,
+          sent_window_started_at: window_start,
+          sent_count: sent_count + 1
+        )
+      else
+        record = create!(
+          email: normalized,
+          code_digest: digest(raw_code),
+          expires_at: TTL.from_now,
+          payload: payload,
+          last_sent_at: now,
+          sent_window_started_at: now,
+          sent_count: 1
+        )
+      end
     end
 
     UserMailer.with(email: normalized, code: raw_code, expires_in: (TTL / 60)).verification_code.deliver_later

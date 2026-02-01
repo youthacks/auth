@@ -15,7 +15,11 @@ class AuthController < ApplicationController
       "password_digest"
     )
 
-    EmailVerification.issue_for(user.email, payload)
+    result = EmailVerification.issue_for(user.email, payload)
+
+    if result == :rate_limited
+      return render json: { error: "Too many verification requests, try again later" }, status: :too_many_requests
+    end
 
     render json: {
       message: "Verification code sent"
@@ -43,7 +47,11 @@ class AuthController < ApplicationController
       return render json: { error: "No pending signup" }, status: :not_found
     end
 
-    EmailVerification.issue_for(email, pending.payload)
+    result = EmailVerification.issue_for(email, pending.payload)
+
+    if result == :rate_limited
+      return render json: { error: "Too many verification requests, try again later" }, status: :too_many_requests
+    end
     render json: { message: "Verification code sent" }, status: :ok
   end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_01_091500) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_01_093000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -23,6 +23,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_01_091500) do
     t.datetime "updated_at", null: false
     t.jsonb "payload", default: {}, null: false
     t.integer "failed_attempts", default: 0, null: false
+    t.datetime "last_sent_at"
+    t.datetime "sent_window_started_at"
+    t.integer "sent_count", default: 0, null: false
   end
 
   create_table "refresh_tokens", force: :cascade do |t|
