@@ -162,7 +162,7 @@ import Layout from "../layouts/Layout.astro";
       errorDiv.textContent = response.error;
       errorDiv.classList.remove("hidden");
     } else {
-      const apiBase = (import.meta.env.PUBLIC_API_URL || "").replace(/\/$/, "");
+      const apiBase = (import.meta.env.BACKEND_URL || "https://auth.youthacks.org").replace(/\/$/, "");
       if (samlRequest && relayState) {
         const redirectUrl = `${apiBase}/v1/idp/sso?SAMLRequest=${encodeURIComponent(samlRequest)}&RelayState=${encodeURIComponent(relayState)}`;
         window.location.href = redirectUrl;

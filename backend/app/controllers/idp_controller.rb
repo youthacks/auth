@@ -1,14 +1,13 @@
 class IdpController < ApplicationController
   include SamlIdp::Controller
 
-  skip_before_action :verify_authenticity_token
-
   def metadata
     render xml: SamlIdp.metadata.signed
   end
 
   def sso
     request_object = decode_request(params[:SAMLRequest], params[:Signature], params[:SigAlg], params[:RelayState])
+    signed_request = params[:Signature].present?
 
     unless request_object&.valid?
       return render json: { error: "Invalid SAMLRequest" }, status: :unauthorized
@@ -40,7 +39,7 @@ class IdpController < ApplicationController
     elsif params[:consent].to_s == "true"
       user.saml_consents.create!(issuer: issuer, granted_at: Time.current, last_used_at: Time.current)
     else
-      return redirect_to frontend_consent_url(request.fullpath, request_object)
+      return redirect_to frontend_consent_url(request.fullpath, request_object, signed_request)
     end
 
     saml_response = encode_response(user.email, audience_uri: request_object.issuer)
@@ -60,7 +59,7 @@ class IdpController < ApplicationController
   end
 
   def frontend_login_url(return_to)
-    frontend_base = ENV.fetch("FRONTEND_BASE_URL", "http://localhost:4321")
+    frontend_base = ENV.fetch("FRONTEND_URL", "https://auth.youthacks.org")
     uri = URI.parse(frontend_base)
     query = URI.decode_www_form(String(uri.query))
     query << ["return_to", return_to]
@@ -68,14 +67,15 @@ class IdpController < ApplicationController
     uri.to_s
   end
 
-  def frontend_consent_url(return_to, request_object)
-    frontend_base = ENV.fetch("FRONTEND_BASE_URL", "http://localhost:4321")
+  def frontend_consent_url(return_to, request_object, signed_request)
+    frontend_base = ENV.fetch("FRONTEND_URL", "https://auth.youthacks.org")
     uri = URI.parse(frontend_base)
     uri.path = "/sso/consent"
     query = URI.decode_www_form(String(uri.query))
     query << ["return_to", return_to]
     query << ["issuer", request_object.issuer.to_s]
     query << ["acs", request_object.acs_url.to_s]
+    query << ["trusted", signed_request ? "true" : "false"]
     uri.query = URI.encode_www_form(query)
     uri.to_s
   end

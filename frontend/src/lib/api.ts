@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.PUBLIC_API_URL || '/';
+const API_URL = import.meta.env.BACKEND_URL || 'https://auth.youthacks.org';
 interface ApiResponse<T = any> {
   data?: T;
   error?: string;

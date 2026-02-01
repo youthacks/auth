@@ -1,5 +1,5 @@
 SamlIdp.configure do |config|
-  base = ENV.fetch("IDP_BASE_URL", "http://localhost:3000")
+  base = ENV.fetch("BACKEND_URL", "https://auth.youthacks.org")
 
   config.x509_certificate = ENV["SAML_IDP_CERT"].presence || SamlIdp::Default::X509_CERTIFICATE
   config.secret_key = ENV["SAML_IDP_PRIVATE_KEY"].presence || SamlIdp::Default::SECRET_KEY

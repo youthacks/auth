@@ -12,6 +12,7 @@ import Layout from "../../layouts/Layout.astro";
         <div class="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
           <div class="font-semibold" id="issuer"></div>
           <div class="mt-2 text-neutral-500" id="acs"></div>
+          <div class="mt-2 text-sm" id="trust"></div>
         </div>
 
         <ul class="mt-4 list-disc space-y-2 pl-6 text-sm text-neutral-700">
@@ -49,14 +50,20 @@ import Layout from "../../layouts/Layout.astro";
   const returnTo = params.get("return_to");
   const issuer = params.get("issuer") || "Unknown service";
   const acs = params.get("acs") || "";
+  const trusted = params.get("trusted") === "true";
 
   const issuerEl = document.getElementById("issuer");
   const acsEl = document.getElementById("acs");
+  const trustEl = document.getElementById("trust");
   const approve = document.getElementById("approve");
   const deny = document.getElementById("deny");
 
   if (issuerEl) issuerEl.textContent = issuer;
   if (acsEl) acsEl.textContent = acs ? `ACS: ${acs}` : "";
+  if (trustEl) {
+    trustEl.textContent = trusted ? "Trusted request (signed by the service)." : "Unverified request (not signed).";
+    trustEl.className = trusted ? "text-green-700" : "text-red-700";
+  }
 
   approve?.addEventListener("click", () => {
     if (!returnTo) {
