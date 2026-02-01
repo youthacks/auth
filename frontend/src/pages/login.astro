@@ -103,7 +103,7 @@ import Layout from "../layouts/Layout.astro";
     forgotButton.textContent = "Forgot password?";
 
     if (response.error) {
-      errorDiv.textContent = response.error;
+      errorDiv.textContent = "Reset password functionality not implemented.";
       errorDiv.classList.remove("hidden");
       return;
     }
@@ -111,7 +111,7 @@ import Layout from "../layouts/Layout.astro";
     const code = response.data?.code;
     errorDiv.textContent = code
       ? `Development mode: reset code is ${code}`
-      : "If the account exists, a reset code was generated.";
+      : "Reset password functionality not implemented.";
     errorDiv.classList.remove("hidden");
   });
 
