@@ -2,6 +2,7 @@ require "digest"
 
 class EmailVerification < ApplicationRecord
   TTL = 10.minutes
+  MAX_ATTEMPTS = 5
 
   validates :email, :code_digest, :expires_at, :payload, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
@@ -35,14 +36,27 @@ class EmailVerification < ApplicationRecord
   def self.consume!(email, code)
     normalized = normalize_email(email)
     record = active.find_by(email: normalized)
-    return false if record.nil?
+    return :invalid if record.nil?
+
+    if record.failed_attempts.to_i >= MAX_ATTEMPTS
+      record.update!(used_at: Time.current)
+      return :too_many
+    end
 
     unless ActiveSupport::SecurityUtils.secure_compare(record.code_digest, digest(code))
-      return false
+      attempts = record.failed_attempts.to_i + 1
+
+      if attempts >= MAX_ATTEMPTS
+        record.update!(failed_attempts: attempts, used_at: Time.current)
+        return :too_many
+      end
+
+      record.update!(failed_attempts: attempts)
+      return :invalid
     end
 
     record.update!(used_at: Time.current)
-    true
+    :ok
   end
 
   def self.digest(code)

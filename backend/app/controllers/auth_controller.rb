@@ -65,7 +65,13 @@ class AuthController < ApplicationController
       return render json: { error: "Invalid or expired code" }, status: :unprocessable_entity
     end
 
-    unless EmailVerification.consume!(email, code)
+    result = EmailVerification.consume!(email, code)
+
+    if result == :too_many
+      return render json: { error: "Too many attempts, request a new code" }, status: :too_many_requests
+    end
+
+    if result != :ok
       return render json: { error: "Invalid or expired code" }, status: :unprocessable_entity
     end
 
