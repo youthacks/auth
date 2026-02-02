@@ -3,9 +3,9 @@ require "digest"
 class EmailVerification < ApplicationRecord
   TTL = 10.minutes
   MAX_ATTEMPTS = 5
-  MAX_SENDS_PER_WINDOW = 5
-  SEND_WINDOW = 1.hour
-  MIN_SEND_INTERVAL = 1.minute
+  MAX_SENDS_PER_WINDOW = 10
+  SEND_WINDOW = 10.minutes
+  MIN_SEND_INTERVAL = 10.seconds
 
   validates :email, :code_digest, :expires_at, :payload, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
