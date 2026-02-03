@@ -21,8 +21,18 @@ default: &default
 
 
 development:
-  <<: *default
-  database: backend_development
+  primary: &primary_development
+    <<: *default
+    database: backend_development
+  cache:
+    <<: *primary_development
+    database: backend_development
+  queue:
+    <<: *primary_development
+    database: backend_development
+  cable:
+    <<: *primary_development
+    database: backend_development
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
@@ -55,8 +65,18 @@ development:
 # re-generated from your development database when you run "rake".
 # Do not set this db to the same as development or production.
 test:
-  <<: *default
-  database: backend_test
+  primary: &primary_test
+    <<: *default
+    database: backend_test
+  cache:
+    <<: *primary_test
+    database: backend_test
+  queue:
+    <<: *primary_test
+    database: backend_test
+  cable:
+    <<: *primary_test
+    database: backend_test
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
