@@ -55,7 +55,7 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: URI(ENV.fetch("APP_URL")).host }
+  config.action_mailer.default_url_options = { host: URI(ENV.fetch("APP_URL", "https://auth.youthacks.org")).host }
 
   config.action_mailer.smtp_settings = {
     user_name: ENV.fetch("SMTP_USER"),
