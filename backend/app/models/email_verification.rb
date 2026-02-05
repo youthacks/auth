@@ -61,7 +61,7 @@ class EmailVerification < ApplicationRecord
       end
     end
 
-    UserMailer.with(email: normalized, code: raw_code, expires_in: (TTL / 60)).verification_code.deliver_later
+    UserMailer.with(email: normalized, code: raw_code, expires_in: (TTL / 60)).verification_code.deliver_now
     record
   end
 
