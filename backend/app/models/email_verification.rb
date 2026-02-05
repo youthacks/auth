@@ -30,13 +30,13 @@ class EmailVerification < ApplicationRecord
           sent_count = record.sent_count.to_i
         end
 
-        if record.last_sent_at.present? && record.last_sent_at > MIN_SEND_INTERVAL.ago
-          return :rate_limited
-        end
+        # if record.last_sent_at.present? && record.last_sent_at > MIN_SEND_INTERVAL.ago
+        #   return :rate_limited
+        # end
 
-        if sent_count >= MAX_SENDS_PER_WINDOW
-          return :rate_limited
-        end
+        # if sent_count >= MAX_SENDS_PER_WINDOW
+        #   return :rate_limited
+        # end
 
         record.update!(
           code_digest: digest(raw_code),
