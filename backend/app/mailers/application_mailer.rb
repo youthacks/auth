@@ -1,7 +1,6 @@
 class ApplicationMailer < ActionMailer::Base
-  DEFAULT_FROM_EMAIL = "auth@youthacks.org"
 
-  default from: ENV.fetch("FROM_EMAIL", DEFAULT_FROM_EMAIL)
+  default from: ENV.fetch("SMTP_FROM") ? ENV.fetch("SMTP_FROM") : Rails.application.credentials.dig(:smtp, :from)
   layout "mailer"
 end
 
