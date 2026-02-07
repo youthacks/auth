@@ -1,2 +1,0 @@
-class SamlController < ApplicationController
-end
