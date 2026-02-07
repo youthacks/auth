@@ -39,19 +39,20 @@ class ApiClient {
         headers,
       });
 
+      const serverErrorMessage = 'Server error. Please try again or contact us at hello@youthacks.org';
       let data: any = null;
       try {
         const text = await response.text();
         data = text ? JSON.parse(text) : null;
       } catch {
         if (!response.ok || response.status >= 500) {
-          return { error: 'Server error' };
+          return { error: serverErrorMessage };
         }
       }
 
       if (!response.ok) {
         if (response.status >= 500) {
-          return { error: 'Server error' };
+          return { error: serverErrorMessage };
         }
 
         return {

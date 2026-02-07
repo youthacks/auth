@@ -1,6 +1,8 @@
 class ApplicationController < ActionController::API
 	include ActionController::Cookies
 
+	rescue_from StandardError, with: :handle_unexpected_error
+
 	private
 
 	def issue_idp_session(user)
@@ -24,5 +26,14 @@ class ApplicationController < ActionController::API
 		User.find_by(id: decoded["sub"])
 	rescue JWT::DecodeError
 		nil
+	end
+
+	def handle_unexpected_error(error)
+		Rails.logger.error("Unhandled error: #{error.class} - #{error.message}")
+		Rails.logger.error(error.backtrace.join("\n")) if error.backtrace
+
+		render json: {
+			error: "Server error. Please try again or contact us at hello@youthacks.org"
+		}, status: :internal_server_error
 	end
 end
