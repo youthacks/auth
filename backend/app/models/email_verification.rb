@@ -13,13 +13,13 @@ class EmailVerification < ApplicationRecord
   scope :active, -> { where(used_at: nil).where(arel_table[:expires_at].gt(Time.current)) }
 
   def self.issue_for(email, payload)
-    normalized = normalize_email(email)
+    normalized_email = normalize_email(email)
     raw_code = format("%06d", SecureRandom.random_number(1_000_000))
     record = nil
     now = Time.current
 
     transaction do
-      record = where(email: normalized).order(created_at: :desc).first
+      record = where(email: normalized_email).order(created_at: :desc).first
 
       if record
         window_start = record.sent_window_started_at || record.created_at || now
@@ -50,7 +50,7 @@ class EmailVerification < ApplicationRecord
         )
       else
         record = create!(
-          email: normalized,
+          email: normalized_email,
           code_digest: digest(raw_code),
           expires_at: TTL.from_now,
           payload: payload,
@@ -61,18 +61,18 @@ class EmailVerification < ApplicationRecord
       end
     end
 
-    UserMailer.with(email: normalized, code: raw_code, expires_in: (TTL / 60)).verification_code.deliver_now
+    UserMailer.with(email: normalized_email, code: raw_code, expires_in: (TTL / 60)).verification_code.deliver_now
     record
   end
 
   def self.latest_for(email)
-    normalized = normalize_email(email)
-    where(email: normalized).order(created_at: :desc).first
+    normalized_email = normalize_email(email)
+    where(email: normalized_email).order(created_at: :desc).first
   end
 
   def self.consume!(email, code)
-    normalized = normalize_email(email)
-    record = active.find_by(email: normalized)
+    normalized_email = normalize_email(email)
+    record = active.find_by(email: normalized_email)
     return :invalid if record.nil?
 
     if record.failed_attempts.to_i >= MAX_ATTEMPTS

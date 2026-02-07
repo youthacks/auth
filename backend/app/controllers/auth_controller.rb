@@ -103,11 +103,11 @@ class AuthController < ApplicationController
       return render json: { error: "Forgot password is available only in development" }, status: :not_implemented
     end
 
-    normalized = identifier.strip.downcase
-    user = if normalized.match?(URI::MailTo::EMAIL_REGEXP)
-      User.find_by(email: normalized)
+    normalized_email = identifier.strip.downcase
+    user = if normalized_email.match?(URI::MailTo::EMAIL_REGEXP)
+      User.find_by(email: normalized_email)
     else
-      User.find_by(username: normalized)
+      User.find_by(username: normalized_email)
     end
 
     code = format("%06d", SecureRandom.random_number(1_000_000))
@@ -126,11 +126,11 @@ class AuthController < ApplicationController
       return render json: { error: "Email or username and password are required" }, status: :unprocessable_entity
     end
 
-    normalized = identifier.strip.downcase
-    user = if normalized.match?(URI::MailTo::EMAIL_REGEXP)
-      User.find_by(email: normalized)
+    normalized_email = identifier.strip.downcase
+    user = if normalized_email.match?(URI::MailTo::EMAIL_REGEXP)
+      User.find_by(email: normalized_email)
     else
-      User.find_by(username: normalized)
+      User.find_by(username: normalized_email)
     end
 
     user&.unlock_if_expired!
