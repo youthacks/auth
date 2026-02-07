@@ -39,12 +39,24 @@ class ApiClient {
         headers,
       });
 
-      const data = await response.json();
+      let data: any = null;
+      try {
+        const text = await response.text();
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        if (!response.ok || response.status >= 500) {
+          return { error: 'Server error' };
+        }
+      }
 
       if (!response.ok) {
+        if (response.status >= 500) {
+          return { error: 'Server error' };
+        }
+
         return {
-          error: data.error || data.errors?.[0] || 'Request failed',
-          errors: data.errors,
+          error: data?.error || data?.errors?.[0] || response.statusText || 'Request failed',
+          errors: data?.errors,
         };
       }
 
