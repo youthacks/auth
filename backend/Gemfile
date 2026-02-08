@@ -50,7 +50,6 @@ end
 # Other gems
 
 gem "jwt"
-gem "saml_idp"
 
 gem "doorkeeper"
 gem "doorkeeper-openid_connect"
