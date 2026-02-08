@@ -7,7 +7,10 @@ Doorkeeper.configure do
 
   # This block will be called to check whether the resource owner is authenticated or not.
   resource_owner_authenticator do
-    current_idp_user || (render json: { error: "Authentication required" }, status: :unauthorized)
+    if current_idp_user
+      current_idp_user
+    else
+      render json: { error: "Authentication required" }, status: :unauthorized
   end
 
   # If you didn't skip applications controller from Doorkeeper routes in your application routes.rb
