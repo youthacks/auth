@@ -1,5 +1,6 @@
 Rails.application.routes.draw do
   use_doorkeeper
+  use_doorkeeper_openid_connect
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   root to: "welcome#show"
