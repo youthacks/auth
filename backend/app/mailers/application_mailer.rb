@@ -1,6 +1,6 @@
 class ApplicationMailer < ActionMailer::Base
 
-  default from: ENV.fetch("SMTP_FROM") ? ENV.fetch("SMTP_FROM") : Rails.application.credentials.dig(:smtp, :from)
+  default from: ENV["SMTP_FROM"].presence || Rails.application.credentials.dig(:smtp, :from)
   layout "mailer"
 end
 

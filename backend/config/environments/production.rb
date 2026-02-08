@@ -55,12 +55,12 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: URI(ENV.fetch("FRONTEND_URL") ? URI(ENV.fetch("FRONTEND_URL")) : Rails.application.credentials.dig(:url, :frontend)).host }
+  config.action_mailer.default_url_options = { host: URI(ENV["FRONTEND_URL"].presence || Rails.application.credentials.dig(:url, :frontend)).host }
 
   config.action_mailer.smtp_settings = {
-    user_name: ENV.fetch("SMTP_USER") ? ENV.fetch("SMTP_USER") : Rails.application.credentials.dig(:smtp, :user_name),
-    password: ENV.fetch("SMTP_PASS") ? ENV.fetch("SMTP_PASS") : Rails.application.credentials.dig(:smtp, :password),
-    address: ENV.fetch("SMTP_HOST") ? ENV.fetch("SMTP_HOST") : Rails.application.credentials.dig(:smtp, :host),
+    user_name: ENV["SMTP_USER"].presence || Rails.application.credentials.dig(:smtp, :user_name),
+    password: ENV["SMTP_PASS"].presence || Rails.application.credentials.dig(:smtp, :password),
+    address: ENV["SMTP_HOST"].presence || Rails.application.credentials.dig(:smtp, :host),
     port: 587,
     authentication: :login,
     enable_starttls_auto: true

@@ -90,6 +90,12 @@ GEM
     debug (1.11.0)
       irb (~> 1.10)
       reline (>= 0.3.8)
+    doorkeeper (5.8.2)
+      railties (>= 5)
+    doorkeeper-openid_connect (1.8.11)
+      doorkeeper (>= 5.5, < 5.9)
+      jwt (>= 2.5)
+      ostruct (>= 0.5)
     dotenv (3.1.7)
     dotenv-rails (3.1.7)
       dotenv (= 3.1.7)
@@ -354,6 +360,8 @@ DEPENDENCIES
   bootsnap
   brakeman
   debug
+  doorkeeper
+  doorkeeper-openid_connect
   dotenv-rails
   jwt
   kamal
