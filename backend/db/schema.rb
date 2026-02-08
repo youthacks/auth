@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_08_145107) do
+ActiveRecord::Schema[8.0].define(version: 2026_02_08_154110) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,17 +81,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_08_145107) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_refresh_tokens_on_user_id"
-  end
-
-  create_table "saml_consents", force: :cascade do |t|
-    t.bigint "user_id", null: false
-    t.string "issuer", null: false
-    t.datetime "granted_at", null: false
-    t.datetime "last_used_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["user_id", "issuer"], name: "index_saml_consents_on_user_id_and_issuer", unique: true
-    t.index ["user_id"], name: "index_saml_consents_on_user_id"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -234,7 +223,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_08_145107) do
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"
   add_foreign_key "refresh_tokens", "users"
-  add_foreign_key "saml_consents", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
