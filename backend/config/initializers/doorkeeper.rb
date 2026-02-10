@@ -11,6 +11,7 @@ Doorkeeper.configure do
       current_idp_user
     else
       render json: { error: "Authentication required" }, status: :unauthorized
+    end
   end
 
   # If you didn't skip applications controller from Doorkeeper routes in your application routes.rb
