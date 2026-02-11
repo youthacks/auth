@@ -11,6 +11,7 @@ import Layout from "../layouts/Layout.astro";
 
         <div id="error" class="mt-4 hidden rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800"></div>
         <div id="success" class="mt-4 hidden rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-800"></div>
+        <div id="notice" class="mt-4 hidden rounded-lg border border-neutral-300 bg-neutral-50 p-3 text-sm text-neutral-700"></div>
 
         <form id="login-form" class="mt-6 space-y-4">
           <div>
@@ -79,23 +80,29 @@ import Layout from "../layouts/Layout.astro";
   const form = document.getElementById("login-form") as HTMLFormElement;
   const errorDiv = document.getElementById("error") as HTMLDivElement;
   const successDiv = document.getElementById("success") as HTMLDivElement;
+  const noticeDiv = document.getElementById("notice") as HTMLDivElement;
   const forgotButton = document.getElementById("forgot-password") as HTMLButtonElement;
 
   const urlParams = new URLSearchParams(window.location.search);
-  const samlRequest = urlParams.get("SAMLRequest");
-  const relayState = urlParams.get("RelayState");
   const returnTo = urlParams.get("return_to");
+  const prompt = urlParams.get("prompt");
+  const forceLogin = prompt === "login";
 
-  if (returnTo) {
+  const buildReturnToUrl = () => {
+    if (!returnTo) return null;
     const target = new URL(returnTo, window.location.origin);
-    const targetParams = target.searchParams;
-    if (!targetParams.get("SAMLRequest") && samlRequest) {
-      targetParams.set("SAMLRequest", samlRequest);
-    }
-    if (!targetParams.get("RelayState") && relayState) {
-      targetParams.set("RelayState", relayState);
-    }
-    window.location.href = target.toString();
+    return target.toString();
+  };
+
+  if (forceLogin) {
+    api.clearLocalSession();
+    noticeDiv.textContent = "Please reauthenticate to continue.";
+    noticeDiv.classList.remove("hidden");
+  }
+
+  if (api.isAuthenticated() && !forceLogin) {
+    const redirectTo = buildReturnToUrl();
+    window.location.href = redirectTo || "/dashboard";
   }
 
   forgotButton.addEventListener("click", async () => {
@@ -162,10 +169,9 @@ import Layout from "../layouts/Layout.astro";
       errorDiv.textContent = response.error;
       errorDiv.classList.remove("hidden");
     } else {
-      const apiBase = (import.meta.env.BACKEND_URL || "https://auth.youthacks.org").replace(/\/$/, "");
-      if (samlRequest && relayState) {
-        const redirectUrl = `${apiBase}/v1/idp/sso?SAMLRequest=${encodeURIComponent(samlRequest)}&RelayState=${encodeURIComponent(relayState)}`;
-        window.location.href = redirectUrl;
+      const redirectTo = buildReturnToUrl();
+      if (redirectTo) {
+        window.location.href = redirectTo;
         return;
       }
 

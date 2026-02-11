@@ -90,6 +90,10 @@ class ApiClient {
     }
   }
 
+  clearLocalSession() {
+    this.clearTokens();
+  }
+
   async signup(data: {
     first_name: string;
     last_name: string;

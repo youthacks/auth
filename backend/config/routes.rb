@@ -16,9 +16,6 @@ Rails.application.routes.draw do
     post "auth/forgot_password", to: "auth#forgot_password"
     post "auth/resend_email_verification", to: "auth#resend_email_verification"
     post "auth/verify_email", to: "auth#verify_email"
-
-    get "idp/metadata", to: "idp#metadata"
-    match "idp/sso", to: "idp#sso", via: [:get, :post]
   end
 
   # Catch-all for undefined routes
