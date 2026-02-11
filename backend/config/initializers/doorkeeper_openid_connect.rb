@@ -5,11 +5,7 @@ Doorkeeper::OpenidConnect.configure do
     'issuer string'
   end
 
-  signing_key <<~KEY
-    -----BEGIN RSA PRIVATE KEY-----
-    ....
-    -----END RSA PRIVATE KEY-----
-  KEY
+  signing_key OpenSSL::PKey::RSA.new(Rails.application.credentials.dig(:doorkeeper, :oidc, :signing_key))
 
   subject_types_supported [:public]
 
