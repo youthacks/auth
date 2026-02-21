@@ -1,8 +1,5 @@
 class WelcomeController < ApplicationController
   def show
-    render json: {
-      message: "Youthacks Auth API",
-      status: "ok"
-    }, status: :ok
+    # Renders app/views/welcome/show.json.jbuilder
   end
 end

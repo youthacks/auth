@@ -32,8 +32,7 @@ class ApplicationController < ActionController::API
 		Rails.logger.error("Unhandled error: #{error.class} - #{error.message}")
 		Rails.logger.error(error.backtrace.join("\n")) if error.backtrace
 
-		render json: {
-			error: "Server error. Please try again or contact us at hello@youthacks.org"
-		}, status: :internal_server_error
+		@error = "Server error. Please try again or contact us at hello@youthacks.org"
+		render "shared/error", status: :internal_server_error
 	end
 end
