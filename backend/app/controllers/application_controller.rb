@@ -1,9 +1,16 @@
 class ApplicationController < ActionController::API
 	include ActionController::Cookies
+	before_action :force_json_format
 
 	rescue_from StandardError, with: :handle_unexpected_error
 
 	private
+
+	def force_json_format
+		return if request.format.json?
+
+		request.format = :json
+	end
 
 	def issue_idp_session(user)
 		payload = {
@@ -33,6 +40,6 @@ class ApplicationController < ActionController::API
 		Rails.logger.error(error.backtrace.join("\n")) if error.backtrace
 
 		@error = "Server error. Please try again or contact us at hello@youthacks.org"
-		render "shared/error", status: :internal_server_error
+		render "shared/error", formats: :json, status: :internal_server_error
 	end
 end

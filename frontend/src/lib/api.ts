@@ -184,6 +184,61 @@ class ApiClient {
     return response;
   }
 
+  async listAdminClients() {
+    return this.request('/v1/admin/clients', {
+      method: 'GET',
+    });
+  }
+
+  async createAdminClient(data: {
+    name: string;
+    redirect_uri: string;
+    scopes?: string;
+    confidential?: boolean;
+  }) {
+    return this.request('/v1/admin/clients', {
+      method: 'POST',
+      body: JSON.stringify({ application: data }),
+    });
+  }
+
+  async updateAdminClient(
+    id: string | number,
+    data: {
+      name: string;
+      redirect_uri: string;
+      scopes?: string;
+      confidential?: boolean;
+    }
+  ) {
+    return this.request(`/v1/admin/clients/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ application: data }),
+    });
+  }
+
+  async deleteAdminClient(id: string | number) {
+    return this.request(`/v1/admin/clients/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async serverStatus(timeoutMs: number = 5000): Promise<boolean> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await this.request('/', {
+        method: 'GET',
+        signal: controller.signal,
+      });
+
+      return !response.error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   getUser() {
     if (typeof window !== 'undefined') {
       const userStr = localStorage.getItem('user');

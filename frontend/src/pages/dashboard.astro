@@ -19,6 +19,8 @@ import Layout from "../layouts/Layout.astro";
           </button>
         </div>
 
+        <div id="notice" class="mt-6 hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"></div>
+
         <div id="user-info" class="mt-8 space-y-4 rounded-lg border border-neutral-200 bg-neutral-50 p-6">
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -45,9 +47,17 @@ import Layout from "../layouts/Layout.astro";
 
   const logoutBtn = document.getElementById("logout-btn") as HTMLButtonElement;
   const welcomeP = document.getElementById("welcome") as HTMLParagraphElement;
+  const noticeDiv = document.getElementById("notice") as HTMLDivElement;
   const nameP = document.getElementById("name") as HTMLParagraphElement;
   const usernameP = document.getElementById("username") as HTMLParagraphElement;
   const emailP = document.getElementById("email") as HTMLParagraphElement;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const notice = urlParams.get("notice");
+  if (notice === "admin_forbidden") {
+    noticeDiv.textContent = "You do not have access to that admin page.";
+    noticeDiv.classList.remove("hidden");
+  }
 
   // Check if user is logged in
   if (!api.isAuthenticated()) {

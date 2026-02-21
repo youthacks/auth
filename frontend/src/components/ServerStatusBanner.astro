@@ -14,32 +14,19 @@
 </div>
 
 <script>
-  const API_URL = (import.meta.env.BACKEND_URL || 'https://auth.youthacks.org/api').replace(/\/$/, "");
-  
+  import { api } from "../lib/api";
+
   async function checkServerStatus() {
     const banner = document.getElementById('server-status-banner');
     if (!banner) return;
 
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-      
-      const response = await fetch(`${API_URL}/`, {
-        method: 'GET',
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        // Server is up, hide banner
-        banner.classList.add('hidden');
-      } else {
-        // Server returned error, show banner
-        banner.classList.remove('hidden');
-      }
-    } catch (error) {
-      // Network error or timeout, show banner
+    const isOnline = await api.serverStatus();
+
+    if (isOnline) {
+      // Server is up, hide banner
+      banner.classList.add('hidden');
+    } else {
+      // Server returned error, show banner
       banner.classList.remove('hidden');
     }
   }

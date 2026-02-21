@@ -4,7 +4,7 @@ class AuthController < ApplicationController
 
     unless user.valid?
       @errors = user.errors.full_messages
-      return render "shared/errors", status: :unprocessable_entity
+      return render "shared/error", status: :unprocessable_entity
     end
 
     payload = user.attributes.slice(

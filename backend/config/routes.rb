@@ -9,13 +9,17 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  scope "v1" do
+  scope "v1", defaults: { format: :json } do
     post "auth/signup", to: "auth#signup"
     post "auth/login", to: "auth#login"
     post "auth/logout", to: "auth#logout"
     post "auth/forgot_password", to: "auth#forgot_password"
     post "auth/resend_email_verification", to: "auth#resend_email_verification"
     post "auth/verify_email", to: "auth#verify_email"
+
+    namespace :admin do
+      resources :clients, only: [:index, :show, :create, :update, :destroy]
+    end
   end
 
   # Catch-all for undefined routes

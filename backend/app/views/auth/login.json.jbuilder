@@ -5,6 +5,7 @@ json.user do
   json.preferred_name @user.preferred_name
   json.username @user.username
   json.email @user.email
+  json.admin @user.admin
 end
 json.refresh_token @refresh_token
 json.message @message

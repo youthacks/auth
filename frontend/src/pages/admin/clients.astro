@@ -1,0 +1,328 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Admin Clients" description="Manage allowed OAuth applications.">
+  <section class="mx-auto max-w-6xl px-6 py-12">
+    <div class="mb-8">
+      <p class="text-xs font-semibold uppercase tracking-widest text-red-700">Admin</p>
+      <h1 class="mt-2 text-3xl font-semibold text-neutral-900">OAuth Applications</h1>
+      <p class="mt-2 text-neutral-600">Create, edit, and remove allowed OAuth clients.</p>
+    </div>
+
+    <div id="admin-content" class="hidden">
+      <div id="status" class="hidden mb-6 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-700"></div>
+      <div id="secret-banner" class="hidden mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900"></div>
+
+      <div class="grid gap-10 lg:grid-cols-[minmax(0,1fr),minmax(0,1.2fr)]">
+        <div class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between">
+            <h2 id="form-title" class="text-lg font-semibold text-neutral-900">Create Application</h2>
+            <button id="cancel-edit" type="button" class="hidden text-sm font-semibold text-neutral-600 hover:text-neutral-900">
+              Cancel edit
+            </button>
+          </div>
+
+          <form id="client-form" class="mt-6 space-y-4">
+            <div>
+              <label for="name" class="text-sm font-semibold text-neutral-700">Name</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                class="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+                placeholder="e.g. My App"
+              />
+            </div>
+
+            <div>
+              <label for="redirect_uri" class="text-sm font-semibold text-neutral-700">Redirect URI</label>
+              <input
+                id="redirect_uri"
+                name="redirect_uri"
+                type="url"
+                required
+                class="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+                placeholder="https://example.com/oauth/callback"
+              />
+            </div>
+
+            <div>
+              <label for="scopes" class="text-sm font-semibold text-neutral-700">Scopes</label>
+              <input
+                id="scopes"
+                name="scopes"
+                type="text"
+                class="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
+                placeholder="public profile email"
+              />
+            </div>
+
+            <label class="flex items-center gap-3 text-sm text-neutral-700">
+              <input id="confidential" name="confidential" type="checkbox" class="h-4 w-4 rounded border-neutral-300" checked />
+              Confidential client
+            </label>
+
+            <button
+              id="submit-btn"
+              type="submit"
+              class="w-full rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800"
+            >
+              Create application
+            </button>
+          </form>
+        </div>
+
+        <div class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-neutral-900">Existing Applications</h2>
+            <button id="refresh-btn" type="button" class="text-sm font-semibold text-neutral-600 hover:text-neutral-900">
+              Refresh
+            </button>
+          </div>
+
+          <div id="clients-loading" class="mt-6 text-sm text-neutral-500">Loading applications...</div>
+          <div id="clients-empty" class="hidden mt-6 text-sm text-neutral-500">No applications yet.</div>
+
+          <div id="clients-table-wrapper" class="hidden mt-6 overflow-x-auto">
+            <table class="w-full border-collapse text-left text-sm">
+              <thead>
+                <tr class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
+                  <th class="py-2 pr-4">Name</th>
+                  <th class="py-2 pr-4">UID</th>
+                  <th class="py-2 pr-4">Redirect URI</th>
+                  <th class="py-2 pr-4">Scopes</th>
+                  <th class="py-2 pr-4">Confidential</th>
+                  <th class="py-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="clients-table-body" class="divide-y divide-neutral-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { api } from "../../lib/api";
+
+  type Client = {
+    id: number;
+    name: string;
+    uid: string;
+    redirect_uri: string;
+    scopes: string;
+    confidential: boolean;
+    created_at: string;
+  };
+
+  const adminContent = document.getElementById("admin-content") as HTMLDivElement;
+  const statusBox = document.getElementById("status") as HTMLDivElement;
+  const secretBanner = document.getElementById("secret-banner") as HTMLDivElement;
+  const loading = document.getElementById("clients-loading") as HTMLDivElement;
+  const emptyState = document.getElementById("clients-empty") as HTMLDivElement;
+  const tableWrapper = document.getElementById("clients-table-wrapper") as HTMLDivElement;
+  const tableBody = document.getElementById("clients-table-body") as HTMLTableSectionElement;
+  const refreshBtn = document.getElementById("refresh-btn") as HTMLButtonElement;
+
+  const form = document.getElementById("client-form") as HTMLFormElement;
+  const nameInput = document.getElementById("name") as HTMLInputElement;
+  const redirectInput = document.getElementById("redirect_uri") as HTMLInputElement;
+  const scopesInput = document.getElementById("scopes") as HTMLInputElement;
+  const confidentialInput = document.getElementById("confidential") as HTMLInputElement;
+  const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
+  const formTitle = document.getElementById("form-title") as HTMLHeadingElement;
+  const cancelEditBtn = document.getElementById("cancel-edit") as HTMLButtonElement;
+
+  let editingId: number | null = null;
+
+  const showStatus = (message: string, tone: "error" | "info" = "info") => {
+    statusBox.textContent = message;
+    statusBox.classList.remove("hidden");
+    statusBox.classList.toggle("border-red-200", tone === "error");
+    statusBox.classList.toggle("bg-red-50", tone === "error");
+    statusBox.classList.toggle("text-red-800", tone === "error");
+    statusBox.classList.toggle("border-neutral-200", tone === "info");
+    statusBox.classList.toggle("bg-white", tone === "info");
+    statusBox.classList.toggle("text-neutral-700", tone === "info");
+  };
+
+  const clearStatus = () => {
+    statusBox.classList.add("hidden");
+    statusBox.textContent = "";
+    secretBanner.classList.add("hidden");
+    secretBanner.textContent = "";
+  };
+
+  const resetForm = () => {
+    editingId = null;
+    formTitle.textContent = "Create Application";
+    submitBtn.textContent = "Create application";
+    cancelEditBtn.classList.add("hidden");
+    form.reset();
+    confidentialInput.checked = true;
+  };
+
+  const fillForm = (client: Client) => {
+    editingId = client.id;
+    formTitle.textContent = "Edit Application";
+    submitBtn.textContent = "Save changes";
+    cancelEditBtn.classList.remove("hidden");
+    nameInput.value = client.name;
+    redirectInput.value = client.redirect_uri;
+    scopesInput.value = client.scopes || "";
+    confidentialInput.checked = client.confidential;
+  };
+
+  const renderTable = (clients: Client[]) => {
+    tableBody.innerHTML = "";
+
+    clients.forEach((client) => {
+      const row = document.createElement("tr");
+      row.className = "text-sm text-neutral-700";
+
+      const nameCell = document.createElement("td");
+      nameCell.className = "py-3 pr-4 font-semibold text-neutral-900";
+      nameCell.textContent = client.name;
+
+      const uidCell = document.createElement("td");
+      uidCell.className = "py-3 pr-4 font-mono text-xs text-neutral-600";
+      uidCell.textContent = client.uid;
+
+      const redirectCell = document.createElement("td");
+      redirectCell.className = "py-3 pr-4 text-neutral-600";
+      redirectCell.textContent = client.redirect_uri;
+
+      const scopesCell = document.createElement("td");
+      scopesCell.className = "py-3 pr-4 text-neutral-600";
+      scopesCell.textContent = client.scopes || "-";
+
+      const confidentialCell = document.createElement("td");
+      confidentialCell.className = "py-3 pr-4 text-neutral-600";
+      confidentialCell.textContent = client.confidential ? "Yes" : "No";
+
+      const actionsCell = document.createElement("td");
+      actionsCell.className = "py-3";
+
+      const editBtn = document.createElement("button");
+      editBtn.type = "button";
+      editBtn.className = "mr-3 text-sm font-semibold text-red-700 hover:text-red-800";
+      editBtn.textContent = "Edit";
+      editBtn.addEventListener("click", () => fillForm(client));
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
+      deleteBtn.className = "text-sm font-semibold text-neutral-600 hover:text-neutral-900";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.addEventListener("click", async () => {
+        if (!confirm(`Delete ${client.name}?`)) return;
+
+        clearStatus();
+        const response = await api.deleteAdminClient(client.id);
+        if (response.error) {
+          showStatus(response.error, "error");
+          return;
+        }
+
+        await loadClients();
+      });
+
+      actionsCell.append(editBtn, deleteBtn);
+      row.append(nameCell, uidCell, redirectCell, scopesCell, confidentialCell, actionsCell);
+      tableBody.append(row);
+    });
+  };
+
+  const loadClients = async () => {
+    loading.classList.remove("hidden");
+    emptyState.classList.add("hidden");
+    tableWrapper.classList.add("hidden");
+
+    const response = await api.listAdminClients();
+    if (response.error) {
+      if (response.error.toLowerCase().includes("forbidden")) {
+        window.location.href = "/dashboard?notice=admin_forbidden";
+        return;
+      }
+      loading.classList.add("hidden");
+      showStatus(response.error, "error");
+      return;
+    }
+
+    const clients = (response.data || []) as Client[];
+    loading.classList.add("hidden");
+
+    if (!clients.length) {
+      emptyState.classList.remove("hidden");
+      return;
+    }
+
+    tableWrapper.classList.remove("hidden");
+    renderTable(clients);
+  };
+
+  if (!api.isAuthenticated()) {
+    window.location.href = "/login";
+  } else {
+    const user = api.getUser();
+    if (!user?.admin) {
+      window.location.href = "/dashboard?notice=admin_forbidden";
+    } else {
+      adminContent.classList.remove("hidden");
+      loadClients();
+    }
+  }
+
+  refreshBtn.addEventListener("click", () => {
+    clearStatus();
+    loadClients();
+  });
+
+  cancelEditBtn.addEventListener("click", () => {
+    clearStatus();
+    resetForm();
+  });
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    clearStatus();
+
+    const payload = {
+      name: nameInput.value.trim(),
+      redirect_uri: redirectInput.value.trim(),
+      scopes: scopesInput.value.trim() || undefined,
+      confidential: confidentialInput.checked,
+    };
+
+    if (!payload.name || !payload.redirect_uri) {
+      showStatus("Name and redirect URI are required.", "error");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = editingId ? "Saving..." : "Creating...";
+
+    const response = editingId
+      ? await api.updateAdminClient(editingId, payload)
+      : await api.createAdminClient(payload);
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = editingId ? "Save changes" : "Create application";
+
+    if (response.error) {
+      showStatus(response.error, "error");
+      return;
+    }
+
+    if (!editingId && response.data?.secret) {
+      secretBanner.textContent = `Client created. Save this secret now: ${response.data.secret}`;
+      secretBanner.classList.remove("hidden");
+    }
+
+    resetForm();
+    await loadClients();
+  });
+</script>
