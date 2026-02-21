@@ -1,6 +1,8 @@
 ---
 import "../styles/global.css";
 import Header from "../components/Header.astro";
+import ServerStatusBanner from "../components/ServerStatusBanner.astro";
+import TestingBanner from "../components/TestingBanner.astro";
 
 interface Props {
   title?: string;
@@ -24,6 +26,8 @@ const { title, description } = Astro.props;
     />
   </head>
   <body class="min-h-screen bg-neutral-50 text-neutral-900">
+    <ServerStatusBanner />
+    <TestingBanner />
     <Header />
     <slot />
   </body>

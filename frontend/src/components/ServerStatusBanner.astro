@@ -1,0 +1,52 @@
+---
+// Server status banner that checks if backend is reachable
+---
+
+<div id="server-status-banner" class="hidden fixed top-0 left-0 right-0 bg-red-50 border-b border-red-200 px-4 py-3 z-50">
+  <div class="mx-auto max-w-7xl">
+    <div class="flex items-center justify-center gap-3">
+      <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <span class="text-red-800 font-medium">Server is currently unavailable. Please try again later.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = (import.meta.env.BACKEND_URL || 'https://auth.youthacks.org/api').replace(/\/$/, "");
+  
+  async function checkServerStatus() {
+    const banner = document.getElementById('server-status-banner');
+    if (!banner) return;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch(`${API_URL}/`, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        // Server is up, hide banner
+        banner.classList.add('hidden');
+      } else {
+        // Server returned error, show banner
+        banner.classList.remove('hidden');
+      }
+    } catch (error) {
+      // Network error or timeout, show banner
+      banner.classList.remove('hidden');
+    }
+  }
+
+  // Check status on page load
+  checkServerStatus();
+  
+  // Check status periodically (every 30 seconds)
+  setInterval(checkServerStatus, 30000);
+</script>
