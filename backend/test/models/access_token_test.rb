@@ -1,6 +1,6 @@
 require "test_helper"
 
-class RefreshTokenTest < ActiveSupport::TestCase
+class AccessTokenTest < ActiveSupport::TestCase
   # test "the truth" do
   #   assert true
   # end

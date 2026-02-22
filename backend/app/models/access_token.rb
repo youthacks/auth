@@ -1,6 +1,7 @@
+
 require "digest"
 
-class RefreshToken < ApplicationRecord
+class AccessToken < ApplicationRecord
   TTL = 30.days
 
   belongs_to :user
