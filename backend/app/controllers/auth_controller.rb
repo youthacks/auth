@@ -1,3 +1,4 @@
+
 class AuthController < ApplicationController
   def signup
     user = User.new(signup_params)
@@ -154,46 +155,61 @@ class AuthController < ApplicationController
     user.reset_failed_logins!
     user.update!(last_login_at: Time.current)
 
-    @refresh_token = RefreshToken.issue_for(user, request)
-    idp_session = issue_idp_session(user)
-
-    cookies.encrypted[:idp_session] = {
-      value: idp_session,
-      httponly: true,
-      same_site: :lax,
-      secure: Rails.env.production?,
-      expires: 1.day.from_now
-    }
-
+    access_token = AccessToken.issue_for(user, request)
     @user = user
+    @access_token = access_token
     @message = "Login successful"
     # Renders app/views/auth/login.json.jbuilder
   end
 
   def logout
-    raw_token = params[:refresh_token].to_s
-
-    if raw_token.blank?
-      @error = "refresh_token is required"
-      return render "shared/error", status: :unprocessable_entity
+    # Revoke the current access token if present
+    auth_header = request.headers["Authorization"].to_s
+    if auth_header.start_with?("Bearer ")
+      raw_token = auth_header.split(" ", 2)[1]
+      digest = AccessToken.digest(raw_token)
+      token_record = AccessToken.active.find_by(token_digest: digest)
+      token_record&.revoke!
     end
-
-    record = RefreshToken.active.find_by(token_digest: RefreshToken.digest(raw_token))
-
-    if record.nil?
-      @error = "Invalid or expired refresh token"
-      return render "shared/error", status: :unauthorized
-    end
-
-    record.revoke!
-
-    cookies.delete(:idp_session)
-
     @message = "Logged out"
-    # Renders app/views/auth/logout.json.jbuilder
+  end
+
+  def user
+    @user = current_idp_user
+    unless @user
+      @error = "User not found or not authenticated"
+      render "shared/error", formats: :json, status: :unauthorized
+      return
+    end
+    Rails.logger.info("Authenticated user: #{@user.username} (ID: #{@user.id})")
+    render "auth/user", formats: :json, status: :ok
   end
 
   private
+
+  def issue_idp_session(user)
+    payload = {
+      sub: user.id,
+      exp: 1.month.from_now.to_i,
+      iat: Time.current.to_i,
+      type: "idp"
+    }
+    JWT.encode(payload, Rails.application.secret_key_base, "HS256")
+  end
+
+  def current_idp_user
+    auth_header = request.headers["Authorization"].to_s
+    return nil unless auth_header.start_with?("Bearer ")
+    raw_token = auth_header.split(" ", 2)[1]
+    return nil if raw_token.blank?
+
+    digest = AccessToken.digest(raw_token)
+    token_record = AccessToken.active.find_by(token_digest: digest)
+    return nil unless token_record && !token_record.expired?
+
+    token_record.update!(last_used_at: Time.current)
+    token_record.user
+  end
 
   def signup_params
     params.fetch(:user, params).permit(

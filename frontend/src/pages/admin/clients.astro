@@ -244,7 +244,7 @@ import Layout from "../../layouts/Layout.astro";
     const response = await api.listAdminClients();
     if (response.error) {
       if (response.error.toLowerCase().includes("forbidden")) {
-        window.location.href = "/dashboard?notice=admin_forbidden";
+        // window.location.href = "/dashboard?notice=admin_forbidden";
         return;
       }
       loading.classList.add("hidden");
@@ -269,7 +269,7 @@ import Layout from "../../layouts/Layout.astro";
   } else {
     const user = api.getUser();
     if (!user?.admin) {
-      window.location.href = "/dashboard?notice=admin_forbidden";
+      // window.location.href = "/dashboard?notice=admin_forbidden";
     } else {
       adminContent.classList.remove("hidden");
       loadClients();

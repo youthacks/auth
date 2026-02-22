@@ -6,5 +6,5 @@ json.user do
   json.email @user.email
   json.admin @user.admin
 end
-json.refresh_token @refresh_token
+json.access_token @access_token
 json.message @message

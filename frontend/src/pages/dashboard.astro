@@ -1,5 +1,15 @@
 ---
 import Layout from "../layouts/Layout.astro";
+
+if (typeof window !== 'undefined') {
+  (async () => {
+    const { api } = await import("../lib/api");
+    const user = await api.getUser();
+    if (!user) {
+      window.location.href = "/login";
+    }
+  })();
+}
 ---
 
 <Layout title="Dashboard">
@@ -63,23 +73,21 @@ import Layout from "../layouts/Layout.astro";
     noticeDiv.classList.remove("hidden");
   }
 
-  // Check if user is logged in
-  if (!api.isAuthenticated()) {
-    window.location.href = "/login";
-  } else {
-    const user = api.getUser();
-    if (user) {
-      welcomeP.textContent = `Welcome back, ${user.preferred_name || user.first_name}!`;
-      nameP.textContent = `${user.first_name} ${user.last_name}`;
-      usernameP.textContent = user.username;
-      
-      // Show admin badge if user is admin
-      if (user.admin) {
-        adminBadge.classList.remove("hidden");
-      }
-      emailP.textContent = user.email;
+  // Check authentication and fetch user info
+  (async () => {
+    const user = await api.getUser();
+    if (!user) {
+      window.location.href = "/login";
+      return;
     }
-  }
+    welcomeP.textContent = `Welcome back, ${user.preferred_name || user.first_name}!`;
+    nameP.textContent = `${user.first_name} ${user.last_name}`;
+    usernameP.textContent = user.username;
+    if (user.admin) {
+      adminBadge.classList.remove("hidden");
+    }
+    emailP.textContent = user.email;
+  })();
 
   logoutBtn.addEventListener("click", async () => {
     logoutBtn.disabled = true;

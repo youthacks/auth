@@ -17,6 +17,8 @@ Rails.application.routes.draw do
     post "auth/resend_email_verification", to: "auth#resend_email_verification"
     post "auth/verify_email", to: "auth#verify_email"
 
+    get "user", to: "users#show"
+
     namespace :admin do
       resources :clients, only: [:index, :show, :create, :update, :destroy]
     end

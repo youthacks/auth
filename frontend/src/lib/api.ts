@@ -7,19 +7,24 @@ interface ApiResponse<T = any> {
 }
 
 class ApiClient {
+    clearTokens() {
+      this.accessToken = undefined;
+      this.refreshToken = undefined;
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+      }
+    }
   private baseURL: string;
-  private accessToken: string | null = null;
-  private refreshToken: string | null = null;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
     
-    // Load tokens from localStorage if available
-    if (typeof window !== 'undefined') {
-      this.accessToken = localStorage.getItem('access_token');
-      this.refreshToken = localStorage.getItem('refresh_token');
-    }
   }
+
+  private accessToken?: string;
+  private refreshToken?: string;
 
   private async request<T = any>(
     endpoint: string,
@@ -29,8 +34,12 @@ class ApiClient {
     const headers = new Headers(options.headers || {});
     headers.set('Content-Type', 'application/json');
 
-    if (this.accessToken) {
-      headers.set('Authorization', `Bearer ${this.accessToken}`);
+    // Attach Bearer token if available
+    if (!headers.has('Authorization')) {
+      const token = this.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('access_token') : undefined);
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
     }
 
     try {
@@ -79,16 +88,7 @@ class ApiClient {
     }
   }
 
-  clearTokens() {
-    this.accessToken = null;
-    this.refreshToken = null;
-    
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
-    }
-  }
+
 
   clearLocalSession() {
     this.clearTokens();
@@ -127,19 +127,18 @@ class ApiClient {
     const response = await this.request<{
       user: any;
       access_token: string;
-      refresh_token: string;
     }>('/v1/auth/login', {
       method: 'POST',
       body: JSON.stringify({ identifier, password }),
     });
 
     if (response.data) {
-      this.setTokens(response.data.access_token, response.data.refresh_token);
+      // Use .access_token as accessToken for Bearer auth
+      this.setTokens(response.data.access_token, '');
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
     }
-
     return response;
   }
 
@@ -239,16 +238,16 @@ class ApiClient {
     }
   }
 
-  getUser() {
-    if (typeof window !== 'undefined') {
-      const userStr = localStorage.getItem('user');
-      return userStr ? JSON.parse(userStr) : null;
-    }
-    return null;
+  async getUser() {
+    // Fetch user info from backend /v1/user
+    const response = await this.request('/v1/user', { method: 'GET' });
+    return response.data.user || null;
   }
 
-  isAuthenticated() {
-    return !!this.accessToken;
+  async isAuthenticated() {
+    // Check authentication by calling backend /v1/user
+    const response = await this.request('/v1/user', { method: 'GET' });
+    return !!response.data;
   }
 }
 

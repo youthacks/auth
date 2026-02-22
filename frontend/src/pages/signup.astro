@@ -126,10 +126,14 @@ import Layout from "../layouts/Layout.astro";
 <script>
   import { api } from "../lib/api";
 
-  // Redirect if already logged in
-  if (api.isAuthenticated()) {
-    window.location.href = "/dashboard";
-  }
+
+  // Redirect to dashboard if already authenticated
+  (async () => {
+    const user = await api.getUser();
+    if (user) {
+      window.location.href = "/dashboard";
+    }
+  })();
 
   const form = document.getElementById("signup-form") as HTMLFormElement;
   const errorDiv = document.getElementById("error") as HTMLDivElement;
