@@ -16,6 +16,7 @@ Rails.application.routes.draw do
     post "auth/forgot_password", to: "auth#forgot_password"
     post "auth/resend_email_verification", to: "auth#resend_email_verification"
     post "auth/verify_email", to: "auth#verify_email"
+    get "auth/me", to: "users#show"
 
     get "user", to: "users#show"
 

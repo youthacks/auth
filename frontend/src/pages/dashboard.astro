@@ -57,6 +57,7 @@ if (typeof window !== 'undefined') {
 
 <script>
   import { api } from "../lib/api";
+  import { consumeFlash } from "../lib/flash";
 
   const logoutBtn = document.getElementById("logout-btn") as HTMLButtonElement;
   const welcomeP = document.getElementById("welcome") as HTMLParagraphElement;
@@ -66,11 +67,19 @@ if (typeof window !== 'undefined') {
   const usernameP = document.getElementById("username") as HTMLParagraphElement;
   const emailP = document.getElementById("email") as HTMLParagraphElement;
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const notice = urlParams.get("notice");
-  if (notice === "admin_forbidden") {
-    noticeDiv.textContent = "You do not have access to that admin page.";
+  const flash = consumeFlash();
+  if (flash) {
+    noticeDiv.textContent = flash.text;
     noticeDiv.classList.remove("hidden");
+
+    const isError = flash.type === "error";
+    noticeDiv.classList.toggle("border-red-200", isError);
+    noticeDiv.classList.toggle("bg-red-50", isError);
+    noticeDiv.classList.toggle("text-red-800", isError);
+
+    noticeDiv.classList.toggle("border-neutral-200", !isError);
+    noticeDiv.classList.toggle("bg-neutral-50", !isError);
+    noticeDiv.classList.toggle("text-neutral-700", !isError);
   }
 
   // Check authentication and fetch user info

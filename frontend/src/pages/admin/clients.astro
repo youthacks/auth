@@ -108,6 +108,7 @@ import Layout from "../../layouts/Layout.astro";
 
 <script>
   import { api } from "../../lib/api";
+  import { setFlash } from "../../lib/flash";
 
   type Client = {
     id: number;
@@ -244,7 +245,8 @@ import Layout from "../../layouts/Layout.astro";
     const response = await api.listAdminClients();
     if (response.error) {
       if (response.error.toLowerCase().includes("forbidden")) {
-        // window.location.href = "/dashboard?notice=admin_forbidden";
+        setFlash({ text: "You do not have access to that admin page.", type: "error" });
+        window.location.href = "/dashboard";
         return;
       }
       loading.classList.add("hidden");
@@ -252,7 +254,7 @@ import Layout from "../../layouts/Layout.astro";
       return;
     }
 
-    const clients = (response.data || []) as Client[];
+    const clients = ((response.data as any)?.clients || []) as Client[];
     loading.classList.add("hidden");
 
     if (!clients.length) {
@@ -264,17 +266,23 @@ import Layout from "../../layouts/Layout.astro";
     renderTable(clients);
   };
 
-  if (!api.isAuthenticated()) {
-    window.location.href = "/login";
-  } else {
-    const user = api.getUser();
-    if (!user?.admin) {
-      // window.location.href = "/dashboard?notice=admin_forbidden";
-    } else {
-      adminContent.classList.remove("hidden");
-      loadClients();
+  (async () => {
+    const authenticated = await api.isAuthenticated();
+    if (!authenticated) {
+      window.location.href = "/login";
+      return;
     }
-  }
+
+    const user = await api.getUser();
+    if (!user?.admin) {
+      setFlash({ text: "You do not have access to that admin page.", type: "error" });
+      window.location.href = "/dashboard";
+      return;
+    }
+
+    adminContent.classList.remove("hidden");
+    await loadClients();
+  })();
 
   refreshBtn.addEventListener("click", () => {
     clearStatus();
@@ -317,8 +325,8 @@ import Layout from "../../layouts/Layout.astro";
       return;
     }
 
-    if (!editingId && response.data?.secret) {
-      secretBanner.textContent = `Client created. Save this secret now: ${response.data.secret}`;
+    if (!editingId && response.data?.client?.secret) {
+      secretBanner.textContent = `Client created. Save this secret now: ${response.data.client.secret}`;
       secretBanner.classList.remove("hidden");
     }
 

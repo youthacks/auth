@@ -197,20 +197,6 @@ class AuthController < ApplicationController
     JWT.encode(payload, Rails.application.secret_key_base, "HS256")
   end
 
-  def current_idp_user
-    auth_header = request.headers["Authorization"].to_s
-    return nil unless auth_header.start_with?("Bearer ")
-    raw_token = auth_header.split(" ", 2)[1]
-    return nil if raw_token.blank?
-
-    digest = AccessToken.digest(raw_token)
-    token_record = AccessToken.active.find_by(token_digest: digest)
-    return nil unless token_record && !token_record.expired?
-
-    token_record.update!(last_used_at: Time.current)
-    token_record.user
-  end
-
   def signup_params
     params.fetch(:user, params).permit(
       :first_name,

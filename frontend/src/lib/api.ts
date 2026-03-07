@@ -239,15 +239,25 @@ class ApiClient {
   }
 
   async getUser() {
-    // Fetch user info from backend /v1/user
     const response = await this.request('/v1/user', { method: 'GET' });
-    return response.data.user || null;
+    if (!response.data) {
+      return null;
+    }
+
+    if ((response.data as any).user) {
+      return (response.data as any).user;
+    }
+
+    if ((response.data as any).username && (response.data as any).email) {
+      return response.data as any;
+    }
+
+    return null;
   }
 
   async isAuthenticated() {
-    // Check authentication by calling backend /v1/user
-    const response = await this.request('/v1/user', { method: 'GET' });
-    return !!response.data;
+    const user = await this.getUser();
+    return !!user;
   }
 }
 

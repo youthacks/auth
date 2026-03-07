@@ -47,10 +47,17 @@ module Admin
 
     def require_admin!
       user = current_idp_user
-      unless user && user.admin?
-        @error = "Forbidden"
-        render "shared/error", formats: :json, status: :forbidden
+      if user.nil?
+        @error = "User not found or not authenticated"
+        render "shared/error", formats: :json, status: :unauthorized
+        return
       end
+
+      return if user.admin?
+
+      @error = "Forbidden"
+      render "shared/error", formats: :json, status: :forbidden
+      return
     end
 
     def set_application
@@ -58,6 +65,7 @@ module Admin
     rescue ActiveRecord::RecordNotFound
       @error = "Application not found"
       render "shared/error", formats: :json, status: :not_found
+      nil
     end
 
     def application_params

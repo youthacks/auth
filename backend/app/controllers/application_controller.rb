@@ -19,4 +19,27 @@ class ApplicationController < ActionController::API
 		@error = "Server error. Please try again or contact us at hello@youthacks.org."
 		render "shared/error", formats: :json, status: :internal_server_error
 	end
+
+	def current_idp_user
+		auth_header = request.headers["Authorization"].to_s
+		return nil unless auth_header.start_with?("Bearer ")
+
+		raw_token = auth_header.split(" ", 2)[1]
+		return nil if raw_token.blank?
+
+		digest = AccessToken.digest(raw_token)
+		token_record = AccessToken.active.find_by(token_digest: digest)
+		return nil unless token_record && !token_record.expired?
+
+		token_record.update!(last_used_at: Time.current)
+		token_record.user
+	end
+
+	def require_idp_user!
+		@current_idp_user = current_idp_user
+		return if @current_idp_user
+
+		@error = "User not found or not authenticated"
+		render "shared/error", formats: :json, status: :unauthorized
+	end
 end
