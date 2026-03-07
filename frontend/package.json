@@ -9,7 +9,7 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.17.1"
+    "astro": "^5.18.0"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
