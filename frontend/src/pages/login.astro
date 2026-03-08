@@ -72,15 +72,6 @@ import Layout from "../layouts/Layout.astro";
 <script>
   import { api } from "../lib/api";
 
-
-  // Redirect to dashboard if already authenticated
-  (async () => {
-    const user = await api.getUser();
-    if (user) {
-      window.location.href = "/dashboard";
-    }
-  })();
-
   const form = document.getElementById("login-form") as HTMLFormElement;
   const errorDiv = document.getElementById("error") as HTMLDivElement;
   const successDiv = document.getElementById("success") as HTMLDivElement;
@@ -92,17 +83,67 @@ import Layout from "../layouts/Layout.astro";
   const prompt = urlParams.get("prompt");
   const forceLogin = prompt === "login";
 
-  const buildReturnToUrl = () => {
+  const backendApiUrl = (import.meta.env.BACKEND_URL || "https://auth.youthacks.org/api").replace(/\/$/, "");
+  const frontendBaseUrl = (import.meta.env.FRONTEND_URL || window.location.origin).replace(/\/$/, "");
+
+  const normalizedReturnTo = (() => {
     if (!returnTo) return null;
-    const target = new URL(returnTo, window.location.origin);
-    return target.toString();
+
+    try {
+      const target = new URL(returnTo, window.location.origin);
+      const expected = new URL(frontendBaseUrl);
+      const sameOrigin = target.origin === expected.origin;
+      const isAuthorizeEndpoint = ["/authorize", "/oauth/authorize"].includes(target.pathname);
+
+      if (!sameOrigin || !isAuthorizeEndpoint) {
+        return null;
+      }
+
+      return target;
+    } catch {
+      return null;
+    }
+  })();
+
+  const buildReturnToUrl = () => {
+    if (!normalizedReturnTo) return null;
+
+    return normalizedReturnTo.toString();
+  };
+
+  const redirectAfterLogin = () => {
+    const redirectTo = buildReturnToUrl();
+
+    if (!redirectTo) {
+      return false;
+    }
+
+    window.location.href = redirectTo;
+    return true;
   };
 
   if (forceLogin) {
     api.clearLocalSession();
     noticeDiv.textContent = "Please reauthenticate to continue.";
     noticeDiv.classList.remove("hidden");
+  } else if (returnTo && !normalizedReturnTo) {
+    noticeDiv.textContent = "Ignoring invalid OAuth return destination.";
+    noticeDiv.classList.remove("hidden");
   }
+
+  // Redirect already authenticated users either back to OAuth authorize or dashboard.
+  (async () => {
+    const user = await api.getUser();
+    if (!user || forceLogin) {
+      return;
+    }
+
+    if (redirectAfterLogin()) {
+      return;
+    }
+
+    window.location.href = "/dashboard";
+  })();
 
   // No client-side authentication check; backend manages session
 
@@ -170,12 +211,11 @@ import Layout from "../layouts/Layout.astro";
       errorDiv.textContent = response.error;
       errorDiv.classList.remove("hidden");
     } else {
-      const redirectTo = buildReturnToUrl();
-      if (redirectTo) {
-        window.location.href = redirectTo;
+      if (redirectAfterLogin()) {
         return;
       }
-      successDiv.textContent = response.data.message || "Login successful! Redirecting...";
+
+      successDiv.textContent = "Login successful! Redirecting...";
       successDiv.classList.remove("hidden");
       window.location.href = "/dashboard";
     }

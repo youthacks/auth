@@ -1,5 +1,4 @@
 class ApplicationController < ActionController::API
-	# include ActionController::Cookies # Removed: switched to session-based storage
 	before_action :force_json_format
 
 	rescue_from StandardError, with: :handle_error
@@ -12,19 +11,35 @@ class ApplicationController < ActionController::API
 		request.format = :json
 	end
 
+	def render_error(message, status: :unprocessable_entity, errors: nil)
+		@error = message
+		@errors = errors if errors.present?
+
+		if errors.present?
+				render "shared/errors", status: status
+		else
+				render "shared/error", status: status
+		end
+	end
+
+	def render_message(message, status: :ok, extra: {})
+		@message = message
+		extra.each { |key, value| instance_variable_set("@#{key}", value) }
+		render "shared/errors", status: status
+	end
+
 	def handle_error(error)
 		Rails.logger.error("Unhandled error: #{error.class} - #{error.message}")
 		Rails.logger.error(error.backtrace.join("\n")) if error.backtrace
 
-		@error = "Server error. Please try again or contact us at hello@youthacks.org."
-		render "shared/error", formats: :json, status: :internal_server_error
+		render_error(
+			"Server error. Please try again or contact us at hello@youthacks.org.",
+			status: :internal_server_error
+		)
 	end
 
 	def current_idp_user
-		auth_header = request.headers["Authorization"].to_s
-		return nil unless auth_header.start_with?("Bearer ")
-
-		raw_token = auth_header.split(" ", 2)[1]
+		raw_token = bearer_token || oauth_handoff_token
 		return nil if raw_token.blank?
 
 		digest = AccessToken.digest(raw_token)
@@ -35,11 +50,23 @@ class ApplicationController < ActionController::API
 		token_record.user
 	end
 
+	def bearer_token
+		auth_header = request.headers["Authorization"].to_s
+		return nil unless auth_header.start_with?("Bearer ")
+
+		auth_header.split(" ", 2)[1]
+	end
+
+	def oauth_handoff_token
+		return nil unless request.path.start_with?("/oauth/")
+
+		params[:idp_token].to_s.presence
+	end
+
 	def require_idp_user!
 		@current_idp_user = current_idp_user
 		return if @current_idp_user
 
-		@error = "User not found or not authenticated"
-		render "shared/error", formats: :json, status: :unauthorized
+		render_error("User not found or not authenticated", status: :unauthorized)
 	end
 end

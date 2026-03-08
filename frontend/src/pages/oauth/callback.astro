@@ -1,0 +1,130 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="OAuth Callback" description="Completes OAuth authorization flow.">
+  <section class="mx-auto max-w-3xl px-6 py-12">
+    <div class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-widest text-red-700">OAuth</p>
+      <h1 class="mt-2 text-2xl font-semibold text-neutral-900">Authorization Callback</h1>
+      <p class="mt-2 text-sm text-neutral-600">
+        Processing your authorization response from the Identity Provider.
+      </p>
+
+      <div id="status" class="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700"></div>
+      <pre id="payload" class="mt-4 hidden overflow-x-auto rounded-lg border border-neutral-200 bg-neutral-950 p-4 text-xs text-neutral-100"></pre>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { api } from "../../lib/api";
+
+  type StoredPkceRequest = {
+    clientId: string;
+    redirectUri: string;
+    codeVerifier: string;
+    clientSecret?: string;
+    postLoginRedirect?: string;
+  };
+
+  const statusEl = document.getElementById("status") as HTMLDivElement;
+  const payloadEl = document.getElementById("payload") as HTMLPreElement;
+
+  const setStatus = (message: string, tone: "info" | "error" = "info") => {
+    statusEl.textContent = message;
+    statusEl.classList.toggle("border-red-200", tone === "error");
+    statusEl.classList.toggle("bg-red-50", tone === "error");
+    statusEl.classList.toggle("text-red-800", tone === "error");
+    statusEl.classList.toggle("border-neutral-200", tone === "info");
+    statusEl.classList.toggle("bg-neutral-50", tone === "info");
+    statusEl.classList.toggle("text-neutral-700", tone === "info");
+  };
+
+  const showPayload = (payload: unknown) => {
+    payloadEl.textContent = JSON.stringify(payload, null, 2);
+    payloadEl.classList.remove("hidden");
+  };
+
+  const loadStoredPkceRequest = (state: string | null): StoredPkceRequest | null => {
+    const keys = state ? [`oauth_pkce:${state}`, "oauth_pkce"] : ["oauth_pkce"];
+
+    for (const key of keys) {
+      const raw = sessionStorage.getItem(key);
+      if (!raw) continue;
+
+      try {
+        const parsed = JSON.parse(raw) as StoredPkceRequest;
+        sessionStorage.removeItem(key);
+        return parsed;
+      } catch {
+        sessionStorage.removeItem(key);
+      }
+    }
+
+    return null;
+  };
+
+  (async () => {
+    const query = new URLSearchParams(window.location.search);
+    const error = query.get("error");
+    const errorDescription = query.get("error_description");
+    const code = query.get("code");
+    const state = query.get("state");
+
+    if (error) {
+      setStatus(errorDescription || error, "error");
+      showPayload({ error, error_description: errorDescription, state });
+      return;
+    }
+
+    if (!code) {
+      setStatus("Missing authorization code in callback URL.", "error");
+      return;
+    }
+
+    const pkceRequest = loadStoredPkceRequest(state);
+
+    if (!pkceRequest) {
+      setStatus("Authorization code received, but no PKCE context was found in session storage.", "error");
+      showPayload({ code, state });
+      return;
+    }
+
+    setStatus("Authorization code received. Exchanging for tokens...");
+
+    const tokenPayload = {
+      grant_type: "authorization_code",
+      code,
+      client_id: pkceRequest.clientId,
+      redirect_uri: pkceRequest.redirectUri,
+      code_verifier: pkceRequest.codeVerifier,
+    } as Record<string, string>;
+
+    if (pkceRequest.clientSecret) {
+      tokenPayload.client_secret = pkceRequest.clientSecret;
+    }
+
+    const response = await api.oauthToken(tokenPayload);
+    const payload = response.data;
+
+    if (response.error || !payload || payload.error) {
+      setStatus(payload?.error_description || payload?.error || response.error || "Token exchange failed.", "error");
+      showPayload(payload || { error: response.error || "Token exchange failed." });
+      return;
+    }
+
+    setStatus("OAuth flow completed. Token response received.");
+    showPayload(payload);
+
+    try {
+      sessionStorage.setItem("oidc_token_response", JSON.stringify(payload));
+    } catch {
+      // Ignore storage failures and continue flow.
+    }
+
+    if (pkceRequest.postLoginRedirect) {
+      window.location.href = pkceRequest.postLoginRedirect;
+    }
+  })();
+</script>

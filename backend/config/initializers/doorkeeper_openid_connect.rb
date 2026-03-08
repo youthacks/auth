@@ -1,17 +1,6 @@
 # frozen_string_literal: true
 
 Doorkeeper::OpenidConnect.configure do
-  frontend_base_url = ENV['FRONTEND_URL'].presence || Rails.application.credentials.dig(:url, :frontend)
-  frontend_redirect = lambda do |path, return_to, extra_params = {}|
-    uri = URI.parse(frontend_base_url)
-    uri.path = path
-    params = Rack::Utils.parse_nested_query(uri.query)
-    params['return_to'] = return_to
-    extra_params.each { |key, value| params[key] = value }
-    uri.query = params.to_query
-    uri.to_s
-  end
-
   issuer do |resource_owner, application|
     ENV['BACKEND_URL'].presence || Rails.application.credentials.dig(:url, :backend)
   end
@@ -31,10 +20,6 @@ Doorkeeper::OpenidConnect.configure do
   end
 
   reauthenticate_resource_owner do |resource_owner, return_to|
-    redirect_url = frontend_redirect.call('/login', return_to, 'prompt' => 'login')
-    return true if redirect_url.blank?
-
-    redirect_to redirect_url
     false
   end
 

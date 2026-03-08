@@ -1,14 +1,18 @@
 module Admin
   class ClientsController < ApplicationController
+    DEFAULT_CLIENT_SCOPES = Doorkeeper.configuration.default_scopes.to_s.freeze
+
     before_action :require_admin!
     before_action :set_application, only: [:show, :update, :destroy]
 
     def index
       @clients = Doorkeeper::Application.all.order(created_at: :desc)
+      render :index, status: :ok
     end
 
     def show
       @client = @app
+      render :show, status: :ok
     end
 
     def create
@@ -19,8 +23,7 @@ module Admin
         @client_secret = app.secret
         render :create, status: :created
       else
-        @errors = app.errors.full_messages
-        render "shared/errors", formats: :json, status: :unprocessable_entity
+        render_error("Validation failed", status: :unprocessable_entity, errors: app.errors.full_messages)
       end
     end
 
@@ -28,18 +31,18 @@ module Admin
       if @app.update(application_params)
         @message = "Client updated"
         @client = @app
+        render :update, status: :ok
       else
-        @errors = @app.errors.full_messages
-        render "shared/errors", formats: :json, status: :unprocessable_entity
+        render_error("Validation failed", status: :unprocessable_entity, errors: @app.errors.full_messages)
       end
     end
 
     def destroy
       if @app.destroy
         @message = "Client deleted"
+        render :destroy, status: :ok
       else
-        @errors = @app.errors.full_messages
-        render "shared/errors", formats: :json, status: :unprocessable_entity
+        render_error("Validation failed", status: :unprocessable_entity, errors: @app.errors.full_messages)
       end
     end
 
@@ -48,28 +51,28 @@ module Admin
     def require_admin!
       user = current_idp_user
       if user.nil?
-        @error = "User not found or not authenticated"
-        render "shared/error", formats: :json, status: :unauthorized
+        render_error("User not found or not authenticated", status: :unauthorized)
         return
       end
 
       return if user.admin?
 
-      @error = "Forbidden"
-      render "shared/error", formats: :json, status: :forbidden
+      render_error("Forbidden", status: :forbidden)
       return
     end
 
     def set_application
       @app = Doorkeeper::Application.find(params[:id])
     rescue ActiveRecord::RecordNotFound
-      @error = "Application not found"
-      render "shared/error", formats: :json, status: :not_found
+      render_error("Application not found", status: :not_found)
       nil
     end
 
     def application_params
-      params.require(:application).permit(:name, :redirect_uri, :scopes, :confidential)
+      permitted = params.require(:application).permit(:name, :redirect_uri)
+      permitted[:scopes] = DEFAULT_CLIENT_SCOPES
+      permitted[:confidential] = true
+      permitted
     end
 
   end

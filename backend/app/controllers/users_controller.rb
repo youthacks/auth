@@ -3,6 +3,6 @@ class UsersController < ApplicationController
 
   def show
     @user = @current_idp_user
-    render "auth/user", formats: :json, status: :ok
+    render "auth/user", status: :ok
   end
 end

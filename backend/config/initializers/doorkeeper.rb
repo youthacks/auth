@@ -10,7 +10,11 @@ Doorkeeper.configure do
     if current_idp_user
       current_idp_user
     else
-      render json: { error: "Authentication required" }, status: :unauthorized
+      render json: {
+        error: "authentication_required",
+        error_description: "Resource owner authentication is required"
+      }, status: :unauthorized
+      nil
     end
   end
 
@@ -231,7 +235,7 @@ Doorkeeper.configure do
   # `grant_type` - the grant type of the request (see Doorkeeper::OAuth)
   # `scopes` - the requested scopes (see Doorkeeper::OAuth::Scopes)
   #
-  # use_refresh_token # Disabled: only access tokens are used
+  use_refresh_token
 
   # Provide support for an owner to be assigned to each registered application (disabled by default)
   # Optional parameter confirmation: true (default: false) if you want to enforce ownership of
@@ -245,8 +249,8 @@ Doorkeeper.configure do
   # For more information go to
   # https://doorkeeper.gitbook.io/guides/ruby-on-rails/scopes
   #
-  default_scopes :openid
-  optional_scopes :profile, :email
+  default_scopes :openid, :profile
+  optional_scopes :email
 
   # Allows to restrict only certain scopes for grant_type.
   # By default, all the scopes will be available for all the grant types.
@@ -469,6 +473,9 @@ Doorkeeper.configure do
   # skip_authorization do |resource_owner, client|
   #   client.superapp? or resource_owner.admin?
   # end
+  skip_authorization do |_resource_owner, _client|
+    true
+  end
 
   # Configure custom constraints for the Token Introspection request.
   # By default this configuration option allows to introspect a token by another

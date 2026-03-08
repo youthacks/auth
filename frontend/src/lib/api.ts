@@ -6,6 +6,24 @@ interface ApiResponse<T = any> {
   message?: string;
 }
 
+interface OAuthAuthorizeResponse {
+  requires_login?: boolean;
+  login_url?: string;
+  redirect_url?: string;
+  error?: string;
+}
+
+interface OAuthTokenResponse {
+  access_token?: string;
+  token_type?: string;
+  expires_in?: number;
+  refresh_token?: string;
+  scope?: string;
+  id_token?: string;
+  error?: string;
+  error_description?: string;
+}
+
 class ApiClient {
     clearTokens() {
       this.accessToken = undefined;
@@ -173,6 +191,18 @@ class ApiClient {
     return response;
   }
 
+  async oauthRefreshToken(payload: {
+    refresh_token: string;
+    client_id: string;
+    client_secret?: string;
+    scope?: string;
+  }): Promise<ApiResponse<OAuthTokenResponse>> {
+    return this.oauthToken({
+      grant_type: 'refresh_token',
+      ...payload,
+    });
+  }
+
   async logout() {
     const response = await this.request('/v1/auth/logout', {
       method: 'POST',
@@ -181,6 +211,62 @@ class ApiClient {
 
     this.clearTokens();
     return response;
+  }
+
+  async oauthAuthorize(query: URLSearchParams | string = ''): Promise<ApiResponse<OAuthAuthorizeResponse>> {
+    const queryParams = typeof query === 'string' ? new URLSearchParams(query.replace(/^\?/, '')) : query;
+    const payload: Record<string, string> = {};
+    queryParams.forEach((value, key) => {
+      payload[key] = value;
+    });
+
+    return this.request<OAuthAuthorizeResponse>('/v1/oidc/authorize/validate', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async oauthToken(payload: Record<string, string>): Promise<ApiResponse<OAuthTokenResponse>> {
+    const headers = new Headers({
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    });
+
+    const token = this.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('access_token') : undefined);
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    try {
+      const response = await fetch('/oauth/token', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      });
+
+      let data: OAuthTokenResponse | undefined;
+      try {
+        data = await response.json();
+      } catch {
+        data = undefined;
+      }
+
+      if (!response.ok) {
+        return {
+          data,
+          error: data?.error_description || data?.error || response.statusText || 'Request failed',
+        };
+      }
+
+      return { data };
+    } catch (error) {
+      return {
+        error: error instanceof Error ? error.message : 'Network error',
+      };
+    }
   }
 
   async listAdminClients() {
@@ -192,8 +278,6 @@ class ApiClient {
   async createAdminClient(data: {
     name: string;
     redirect_uri: string;
-    scopes?: string;
-    confidential?: boolean;
   }) {
     return this.request('/v1/admin/clients', {
       method: 'POST',
@@ -206,8 +290,6 @@ class ApiClient {
     data: {
       name: string;
       redirect_uri: string;
-      scopes?: string;
-      confidential?: boolean;
     }
   ) {
     return this.request(`/v1/admin/clients/${id}`, {

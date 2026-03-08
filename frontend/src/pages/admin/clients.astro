@@ -48,22 +48,6 @@ import Layout from "../../layouts/Layout.astro";
               />
             </div>
 
-            <div>
-              <label for="scopes" class="text-sm font-semibold text-neutral-700">Scopes</label>
-              <input
-                id="scopes"
-                name="scopes"
-                type="text"
-                class="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
-                placeholder="public profile email"
-              />
-            </div>
-
-            <label class="flex items-center gap-3 text-sm text-neutral-700">
-              <input id="confidential" name="confidential" type="checkbox" class="h-4 w-4 rounded border-neutral-300" checked />
-              Confidential client
-            </label>
-
             <button
               id="submit-btn"
               type="submit"
@@ -132,8 +116,6 @@ import Layout from "../../layouts/Layout.astro";
   const form = document.getElementById("client-form") as HTMLFormElement;
   const nameInput = document.getElementById("name") as HTMLInputElement;
   const redirectInput = document.getElementById("redirect_uri") as HTMLInputElement;
-  const scopesInput = document.getElementById("scopes") as HTMLInputElement;
-  const confidentialInput = document.getElementById("confidential") as HTMLInputElement;
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
   const formTitle = document.getElementById("form-title") as HTMLHeadingElement;
   const cancelEditBtn = document.getElementById("cancel-edit") as HTMLButtonElement;
@@ -164,7 +146,6 @@ import Layout from "../../layouts/Layout.astro";
     submitBtn.textContent = "Create application";
     cancelEditBtn.classList.add("hidden");
     form.reset();
-    confidentialInput.checked = true;
   };
 
   const fillForm = (client: Client) => {
@@ -174,8 +155,6 @@ import Layout from "../../layouts/Layout.astro";
     cancelEditBtn.classList.remove("hidden");
     nameInput.value = client.name;
     redirectInput.value = client.redirect_uri;
-    scopesInput.value = client.scopes || "";
-    confidentialInput.checked = client.confidential;
   };
 
   const renderTable = (clients: Client[]) => {
@@ -301,8 +280,6 @@ import Layout from "../../layouts/Layout.astro";
     const payload = {
       name: nameInput.value.trim(),
       redirect_uri: redirectInput.value.trim(),
-      scopes: scopesInput.value.trim() || undefined,
-      confidential: confidentialInput.checked,
     };
 
     if (!payload.name || !payload.redirect_uri) {
@@ -333,4 +310,6 @@ import Layout from "../../layouts/Layout.astro";
     resetForm();
     await loadClients();
   });
+
+  resetForm();
 </script>

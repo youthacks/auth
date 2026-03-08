@@ -10,8 +10,21 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   scope "v1", defaults: { format: :json } do
+    get "oauth/authorize", to: "oauth#authorize"
+    post "oauth/token", to: "oauth#token"
+
+    scope "oidc" do
+      post "authorize/validate", to: "oauth#authorize_validate"
+      post "login", to: "auth#login"
+      post "consent", to: "oauth#consent"
+      post "token", to: "oauth#token"
+      get "userinfo", to: "users#show"
+      get "jwks", to: "oauth#jwks"
+    end
+
     post "auth/signup", to: "auth#signup"
     post "auth/login", to: "auth#login"
+    post "auth/refresh", to: "auth#refresh"
     post "auth/logout", to: "auth#logout"
     post "auth/forgot_password", to: "auth#forgot_password"
     post "auth/resend_email_verification", to: "auth#resend_email_verification"

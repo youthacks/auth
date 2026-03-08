@@ -1,0 +1,46 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="OAuth Authorize" description="Redirecting to Identity Provider authorization endpoint.">
+  <section class="mx-auto max-w-2xl px-6 py-12">
+    <div class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+      <p class="text-xs font-semibold uppercase tracking-widest text-red-700">OAuth</p>
+      <h1 class="mt-2 text-2xl font-semibold text-neutral-900">Redirecting to IdP</h1>
+      <p class="mt-2 text-sm text-neutral-600">
+        Finalizing authorization with the identity provider.
+      </p>
+      <p id="status" class="mt-4 text-sm text-neutral-500">Preparing redirect...</p>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import { api } from "../../lib/api";
+
+  const statusEl = document.getElementById("status") as HTMLParagraphElement;
+
+  (async () => {
+    const sourceParams = new URLSearchParams(window.location.search);
+    const response = await api.oauthAuthorize(sourceParams);
+    const payload = response.data;
+
+    if (payload?.login_url) {
+      statusEl.textContent = "Redirecting to login...";
+      window.location.replace(payload.login_url);
+      return;
+    }
+
+    const redirectUrl = payload?.redirect_url || (payload as any)?.redirect_uri;
+
+    if (redirectUrl) {
+      statusEl.textContent = "Redirecting...";
+      window.location.replace(redirectUrl);
+      return;
+    }
+
+    const payloadError = payload?.error || (payload as any)?.error_description;
+    const serialized = payload ? ` ${JSON.stringify(payload)}` : "";
+    statusEl.textContent = response.error || payloadError || `Unable to start OAuth flow.${serialized}`;
+  })();
+</script>
