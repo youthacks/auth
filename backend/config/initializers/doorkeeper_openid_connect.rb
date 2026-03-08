@@ -2,7 +2,7 @@
 
 Doorkeeper::OpenidConnect.configure do
   issuer do |resource_owner, application|
-    ENV['BACKEND_URL'].presence || Rails.application.credentials.dig(:url, :backend)
+    ENV['FRONTEND_URL'].presence || Rails.application.credentials.dig(:url, :frontend) || ENV['BACKEND_URL'].presence || Rails.application.credentials.dig(:url, :backend)
   end
 
   signing_key OpenSSL::PKey::RSA.new(
