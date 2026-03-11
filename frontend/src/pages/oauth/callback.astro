@@ -117,12 +117,6 @@ import Layout from "../../layouts/Layout.astro";
     setStatus("OAuth flow completed. Token response received.");
     showPayload(payload);
 
-    try {
-      sessionStorage.setItem("oidc_token_response", JSON.stringify(payload));
-    } catch {
-      // Ignore storage failures and continue flow.
-    }
-
     if (pkceRequest.postLoginRedirect) {
       window.location.href = pkceRequest.postLoginRedirect;
     }
