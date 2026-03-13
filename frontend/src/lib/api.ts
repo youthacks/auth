@@ -71,6 +71,7 @@ class ApiClient {
         }
 
         return {
+          data,
           error: data?.error || data?.errors?.[0] || response.statusText || 'Request failed',
           errors: data?.errors,
         };

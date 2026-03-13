@@ -31,6 +31,14 @@ import Layout from "../../layouts/Layout.astro";
       return;
     }
 
+    if (payload?.requires_login || response.error === "authentication_required") {
+      statusEl.textContent = "Redirecting to login...";
+      const loginUrl = new URL("/login", window.location.origin);
+      loginUrl.searchParams.set("return_to", window.location.href);
+      window.location.replace(loginUrl.toString());
+      return;
+    }
+
     const redirectUrl = payload?.redirect_url || (payload as any)?.redirect_uri;
 
     if (redirectUrl) {

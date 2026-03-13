@@ -62,7 +62,6 @@ class OauthController < ApplicationController
   private
 
   def perform_authorize(oauth_params)
-
     if current_idp_user.nil?
       login_url = with_query("#{frontend_base_url}/login", { return_to: frontend_authorize_url(oauth_params) })
       return render json: { requires_login: true, login_url: login_url }, status: :unauthorized
@@ -79,6 +78,11 @@ class OauthController < ApplicationController
       payload = JSON.parse(read_rack_body(upstream_body))
 
       if payload.is_a?(Hash)
+        if payload["error"].to_s == "authentication_required"
+          login_url = with_query("#{frontend_base_url}/login", { return_to: frontend_authorize_url(oauth_params) })
+          return render json: { requires_login: true, login_url: login_url }, status: :unauthorized
+        end
+
         redirect_url = payload["redirect_url"].presence || payload["redirect_uri"].presence || payload["location"].presence
         if redirect_url.present?
           return render json: { requires_login: false, redirect_url: redirect_url }, status: :ok
@@ -115,7 +119,7 @@ class OauthController < ApplicationController
       env_options
     )
 
-    token = bearer_token
+    token = bearer_token || oauth_handoff_token || cookie_token
     env["HTTP_AUTHORIZATION"] = "Bearer #{token}" if token.present?
 
     Rails.application.call(env)
@@ -145,7 +149,7 @@ class OauthController < ApplicationController
   end
 
   def frontend_authorize_url(oauth_params)
-    with_query("#{frontend_base_url}/authorize", oauth_params)
+    with_query("#{frontend_base_url}/oauth/authorize", oauth_params)
   end
 
   def response_location(headers)
