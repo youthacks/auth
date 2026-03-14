@@ -93,9 +93,9 @@ import Layout from "../layouts/Layout.astro";
       const target = new URL(returnTo, window.location.origin);
       const expected = new URL(frontendBaseUrl);
       const sameOrigin = target.origin === expected.origin;
-      const isAuthorizeEndpoint = ["/authorize", "/oauth/authorize"].includes(target.pathname);
+      const isAllowedPath = target.pathname.startsWith("/") && target.pathname !== "/login";
 
-      if (!sameOrigin || !isAuthorizeEndpoint) {
+      if (!sameOrigin || !isAllowedPath) {
         return null;
       }
 

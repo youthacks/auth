@@ -6,7 +6,9 @@ if (typeof window !== 'undefined') {
     const { api } = await import("../lib/api");
     const user = await api.getUser();
     if (!user) {
-      window.location.href = "/login";
+      const loginUrl = new URL("/login", window.location.origin);
+      loginUrl.searchParams.set("return_to", window.location.href);
+      window.location.href = loginUrl.toString();
     }
   })();
 }
@@ -86,7 +88,9 @@ if (typeof window !== 'undefined') {
   (async () => {
     const user = await api.getUser();
     if (!user) {
-      window.location.href = "/login";
+      const loginUrl = new URL("/login", window.location.origin);
+      loginUrl.searchParams.set("return_to", window.location.href);
+      window.location.href = loginUrl.toString();
       return;
     }
     welcomeP.textContent = `Welcome back, ${user.preferred_name || user.first_name}!`;
