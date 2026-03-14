@@ -1,4 +1,8 @@
 class ApplicationController < ActionController::API
+	include ActionController::Cookies
+
+	ACCESS_TOKEN_COOKIE = :idp_access_token
+
 	before_action :force_json_format
 
 	rescue_from StandardError, with: :handle_error
@@ -39,7 +43,7 @@ class ApplicationController < ActionController::API
 	end
 
 	def current_idp_user
-		raw_token = bearer_token || oauth_handoff_token
+		raw_token = bearer_token || oauth_handoff_token || cookie_token
 		return nil if raw_token.blank?
 
 		digest = AccessToken.digest(raw_token)
@@ -61,6 +65,27 @@ class ApplicationController < ActionController::API
 		return nil unless request.path.start_with?("/oauth/")
 
 		params[:idp_token].to_s.presence
+	end
+
+	def cookie_token
+		cookies.encrypted[ACCESS_TOKEN_COOKIE].to_s.presence
+	end
+
+	def access_token_cookie_options
+		{
+			http_only: true,
+			secure: Rails.env.production?,
+			same_site: :lax,
+			expires: AccessToken::TTL.from_now
+		}
+	end
+
+	def set_access_token_cookie(raw_token)
+		cookies.encrypted[ACCESS_TOKEN_COOKIE] = access_token_cookie_options.merge(value: raw_token)
+	end
+
+	def clear_access_token_cookie
+		cookies.delete(ACCESS_TOKEN_COOKIE, access_token_cookie_options.except(:expires))
 	end
 
 	def require_idp_user!

@@ -25,9 +25,7 @@ interface OAuthTokenResponse {
 }
 
 class ApiClient {
-    clearTokens() {
-      this.accessToken = undefined;
-      this.refreshToken = undefined;
+    clearLegacyStorage() {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
@@ -41,9 +39,6 @@ class ApiClient {
     
   }
 
-  private accessToken?: string;
-  private refreshToken?: string;
-
   private async request<T = any>(
     endpoint: string,
     options: RequestInit = {}
@@ -52,18 +47,11 @@ class ApiClient {
     const headers = new Headers(options.headers || {});
     headers.set('Content-Type', 'application/json');
 
-    // Attach Bearer token if available
-    if (!headers.has('Authorization')) {
-      const token = this.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('access_token') : undefined);
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-    }
-
     try {
       const response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include',
       });
 
       const serverErrorMessage = 'Server error. Please try again or contact us at hello@youthacks.org';
@@ -83,6 +71,7 @@ class ApiClient {
         }
 
         return {
+          data,
           error: data?.error || data?.errors?.[0] || response.statusText || 'Request failed',
           errors: data?.errors,
         };
@@ -96,20 +85,9 @@ class ApiClient {
     }
   }
 
-  setTokens(accessToken: string, refreshToken: string) {
-    this.accessToken = accessToken;
-    this.refreshToken = refreshToken;
-    
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('access_token', accessToken);
-      localStorage.setItem('refresh_token', refreshToken);
-    }
-  }
-
-
-
   clearLocalSession() {
-    this.clearTokens();
+    this.clearLegacyStorage();
+    void this.logout();
   }
 
   async signup(data: {
@@ -144,19 +122,11 @@ class ApiClient {
   async login(identifier: string, password: string) {
     const response = await this.request<{
       user: any;
-      access_token: string;
     }>('/v1/auth/login', {
       method: 'POST',
       body: JSON.stringify({ identifier, password }),
     });
 
-    if (response.data) {
-      // Use .access_token as accessToken for Bearer auth
-      this.setTokens(response.data.access_token, '');
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-      }
-    }
     return response;
   }
 
@@ -168,27 +138,9 @@ class ApiClient {
   }
 
   async refresh() {
-    if (!this.refreshToken) {
-      return { error: 'No refresh token available' };
-    }
-
-    const response = await this.request<{
-      access_token: string;
-      user: any;
-    }>('/v1/auth/refresh', {
+    return this.request('/v1/auth/refresh', {
       method: 'POST',
-      body: JSON.stringify({ refresh_token: this.refreshToken }),
     });
-
-    if (response.data) {
-      this.accessToken = response.data.access_token;
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', response.data.access_token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-      }
-    }
-
-    return response;
   }
 
   async oauthRefreshToken(payload: {
@@ -204,12 +156,11 @@ class ApiClient {
   }
 
   async logout() {
-    const response = await this.request('/v1/auth/logout', {
+    const response = await this.request<{ message?: string }>('/v1/auth/logout', {
       method: 'POST',
-      body: JSON.stringify({ refresh_token: this.refreshToken }),
     });
 
-    this.clearTokens();
+    this.clearLegacyStorage();
     return response;
   }
 
@@ -235,16 +186,12 @@ class ApiClient {
       'Content-Type': 'application/json',
     });
 
-    const token = this.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('access_token') : undefined);
-    if (token) {
-      headers.set('Authorization', `Bearer ${token}`);
-    }
-
     try {
       const response = await fetch('/oauth/token', {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
+        credentials: 'include',
       });
 
       let data: OAuthTokenResponse | undefined;

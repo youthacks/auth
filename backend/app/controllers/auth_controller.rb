@@ -137,19 +137,20 @@ class AuthController < ApplicationController
 
     @user = user
     @access_token = AccessToken.issue_for(user, request)
+    set_access_token_cookie(@access_token)
     @message = "Login successful"
     render :login, status: :ok
   end
 
   def logout
     # Revoke the current access token if present
-    auth_header = request.headers["Authorization"].to_s
-    if auth_header.start_with?("Bearer ")
-      raw_token = auth_header.split(" ", 2)[1]
+    raw_token = bearer_token || cookie_token
+    if raw_token.present?
       digest = AccessToken.digest(raw_token)
       token_record = AccessToken.active.find_by(token_digest: digest)
       token_record&.revoke!
     end
+    clear_access_token_cookie
     @message = "Logged out"
     render :logout, status: :ok
   end
