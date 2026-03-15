@@ -7,8 +7,6 @@ class OauthController < ApplicationController
     response_type
     scope
     state
-    code_challenge
-    code_challenge_method
     nonce
     prompt
     response_mode
@@ -141,7 +139,7 @@ class OauthController < ApplicationController
   end
 
   def token_request_params
-    params.to_unsafe_h.except("controller", "action", "format")
+    params.to_unsafe_h.except("controller", "action", "format", "code_verifier")
   end
 
   def frontend_base_url

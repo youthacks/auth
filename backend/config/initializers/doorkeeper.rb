@@ -178,10 +178,8 @@ Doorkeeper.configure do
   #
   # revoke_previous_authorization_code_token
 
-  # Require non-confidential clients to use PKCE when using an authorization code
-  # to obtain an access_token (disabled by default)
-  #
-  force_pkce
+  # PKCE is intentionally disabled in this deployment.
+  # OAuth clients are expected to be confidential clients.
 
   # Hash access and refresh tokens before persisting them.
   # This will disable the possibility to use +reuse_access_token+

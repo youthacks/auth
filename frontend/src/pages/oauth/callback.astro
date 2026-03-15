@@ -20,10 +20,9 @@ import Layout from "../../layouts/Layout.astro";
 <script>
   import { api } from "../../lib/api";
 
-  type StoredPkceRequest = {
+  type StoredOauthRequest = {
     clientId: string;
     redirectUri: string;
-    codeVerifier: string;
     clientSecret?: string;
     postLoginRedirect?: string;
   };
@@ -46,7 +45,7 @@ import Layout from "../../layouts/Layout.astro";
     payloadEl.classList.remove("hidden");
   };
 
-  const loadStoredPkceRequest = (state: string | null): StoredPkceRequest | null => {
+  const loadStoredOauthRequest = (state: string | null): StoredOauthRequest | null => {
     const keys = state ? [`oauth_pkce:${state}`, "oauth_pkce"] : ["oauth_pkce"];
 
     for (const key of keys) {
@@ -54,7 +53,7 @@ import Layout from "../../layouts/Layout.astro";
       if (!raw) continue;
 
       try {
-        const parsed = JSON.parse(raw) as StoredPkceRequest;
+        const parsed = JSON.parse(raw) as StoredOauthRequest;
         sessionStorage.removeItem(key);
         return parsed;
       } catch {
@@ -83,11 +82,15 @@ import Layout from "../../layouts/Layout.astro";
       return;
     }
 
-    const pkceRequest = loadStoredPkceRequest(state);
+    const storedRequest = loadStoredOauthRequest(state);
+    const clientId = storedRequest?.clientId || query.get("client_id") || "";
+    const redirectUri = storedRequest?.redirectUri || query.get("redirect_uri") || "";
+    const clientSecret = storedRequest?.clientSecret || query.get("client_secret") || undefined;
+    const postLoginRedirect = storedRequest?.postLoginRedirect || query.get("post_login_redirect") || undefined;
 
-    if (!pkceRequest) {
-      setStatus("Authorization code received, but no PKCE context was found in session storage.", "error");
-      showPayload({ code, state });
+    if (!clientId || !redirectUri) {
+      setStatus("Missing client context for token exchange (client_id and redirect_uri are required).", "error");
+      showPayload({ code, state, client_id: clientId || null, redirect_uri: redirectUri || null });
       return;
     }
 
@@ -96,13 +99,12 @@ import Layout from "../../layouts/Layout.astro";
     const tokenPayload = {
       grant_type: "authorization_code",
       code,
-      client_id: pkceRequest.clientId,
-      redirect_uri: pkceRequest.redirectUri,
-      code_verifier: pkceRequest.codeVerifier,
+      client_id: clientId,
+      redirect_uri: redirectUri,
     } as Record<string, string>;
 
-    if (pkceRequest.clientSecret) {
-      tokenPayload.client_secret = pkceRequest.clientSecret;
+    if (clientSecret) {
+      tokenPayload.client_secret = clientSecret;
     }
 
     const response = await api.oauthToken(tokenPayload);
@@ -117,8 +119,8 @@ import Layout from "../../layouts/Layout.astro";
     setStatus("OAuth flow completed. Token response received.");
     showPayload(payload);
 
-    if (pkceRequest.postLoginRedirect) {
-      window.location.href = pkceRequest.postLoginRedirect;
+    if (postLoginRedirect) {
+      window.location.href = postLoginRedirect;
     }
   })();
 </script>
