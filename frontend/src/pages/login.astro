@@ -83,7 +83,6 @@ import Layout from "../layouts/Layout.astro";
   const prompt = urlParams.get("prompt");
   const forceLogin = prompt === "login";
 
-  const backendApiUrl = (import.meta.env.BACKEND_URL || "https://auth.youthacks.org/api").replace(/\/$/, "");
   const frontendBaseUrl = (import.meta.env.FRONTEND_URL || window.location.origin).replace(/\/$/, "");
 
   const normalizedReturnTo = (() => {
