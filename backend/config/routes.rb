@@ -20,10 +20,6 @@ Rails.application.routes.draw do
       post "authorize/validate", to: "oauth#authorize_validate"
       post "login", to: "auth#login"
       post "consent", to: "oauth#consent"
-      post "token", to: "oauth#token"
-      get "userinfo", to: "oauth#userinfo"
-      post "userinfo", to: "oauth#userinfo"
-      get "jwks", to: "oauth#jwks"
     end
 
     scope "auth" do

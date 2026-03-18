@@ -32,17 +32,6 @@ class OauthController < ApplicationController
     render_error("Consent endpoint is not yet implemented", status: :not_implemented)
   end
 
-  def jwks
-    upstream_status, _upstream_headers, upstream_body = proxy_to_path("/oauth/discovery/keys", method: "GET")
-
-    begin
-      payload = JSON.parse(read_rack_body(upstream_body))
-      render json: payload, status: upstream_status
-    rescue JSON::ParserError
-      render_error("Invalid JWKS response", status: :bad_gateway)
-    end
-  end
-
   def token
     rejection = reject_non_confidential_client
     return if rejection
@@ -55,30 +44,6 @@ class OauthController < ApplicationController
     rescue JSON::ParserError
       render_error("Invalid token response", status: :bad_gateway)
     end
-  end
-
-  def userinfo
-    method = request.request_method
-    body = nil
-    content_type = nil
-
-    if method == "POST"
-      body = request.raw_post.presence
-      content_type = request.content_type.presence || "application/json"
-    end
-
-    upstream_status, upstream_headers, upstream_body = proxy_to_path(
-      "/oauth/userinfo",
-      method: method,
-      input: body,
-      content_type: content_type
-    )
-
-    response_headers = {}
-    upstream_content_type = response_header_value(upstream_headers, "content-type")
-    response_headers["Content-Type"] = upstream_content_type if upstream_content_type.present?
-
-    render plain: read_rack_body(upstream_body), status: upstream_status, headers: response_headers
   end
 
   private
@@ -174,16 +139,6 @@ class OauthController < ApplicationController
 
     headers.each do |key, value|
       return value if key.to_s.casecmp("location").zero?
-    end
-
-    nil
-  end
-
-  def response_header_value(headers, header_name)
-    return nil if headers.blank?
-
-    headers.each do |key, value|
-      return value if key.to_s.casecmp(header_name).zero?
     end
 
     nil
