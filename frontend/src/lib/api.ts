@@ -1,4 +1,4 @@
-const API_URL = (import.meta.env.BACKEND_URL || 'https://auth.youthacks.org/api').replace(/\/$/, "");
+const API_URL = (import.meta.env.BACKEND_URL || 'http://localhost:3000').replace(/\/$/, "");
 interface ApiResponse<T = any> {
   data?: T;
   error?: string;
@@ -11,6 +11,7 @@ interface OAuthAuthorizeResponse {
   login_url?: string;
   redirect_url?: string;
   error?: string;
+  reason?: string;
 }
 
 interface OAuthTokenResponse {

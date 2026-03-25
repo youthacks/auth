@@ -9,27 +9,30 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  scope "v1", defaults: { format: :json } do
-    get "oauth/authorize", to: "oauth#authorize"
-    post "oauth/token", to: "oauth#token"
+  scope "v1" do
+
+    scope "oauth" do
+      get "authorize", to: "oauth#authorize"
+      post "token", to: "oauth#token"
+    end
 
     scope "oidc" do
       post "authorize/validate", to: "oauth#authorize_validate"
       post "login", to: "auth#login"
       post "consent", to: "oauth#consent"
-      post "token", to: "oauth#token"
-      get "userinfo", to: "users#show"
-      get "jwks", to: "oauth#jwks"
     end
 
-    post "auth/signup", to: "auth#signup"
-    post "auth/login", to: "auth#login"
-    post "auth/refresh", to: "auth#refresh"
-    post "auth/logout", to: "auth#logout"
-    post "auth/forgot_password", to: "auth#forgot_password"
-    post "auth/resend_email_verification", to: "auth#resend_email_verification"
-    post "auth/verify_email", to: "auth#verify_email"
-    get "auth/me", to: "users#show"
+    scope "auth" do
+
+      post "signup", to: "auth#signup"
+      post "login", to: "auth#login"
+      post "refresh", to: "auth#refresh"
+      post "logout", to: "auth#logout"
+      post "forgot_password", to: "auth#forgot_password"
+      post "resend_email_verification", to: "auth#resend_email_verification"
+      post "verify_email", to: "auth#verify_email"
+      get "me", to: "users#show"
+    end
 
     get "user", to: "users#show"
 

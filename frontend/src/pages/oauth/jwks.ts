@@ -3,7 +3,7 @@ import type { APIRoute } from 'astro';
 export const prerender = false;
 
 const backendBaseUrl = (import.meta.env.BACKEND_URL || 'http://localhost:3000').replace(/\/$/, '');
-const jwksEndpoint = `${backendBaseUrl}/v1/oidc/jwks`;
+const jwksEndpoint = `${backendBaseUrl}/oauth/discovery/keys`;
 
 export const GET: APIRoute = async () => {
   const upstream = await fetch(jwksEndpoint, {

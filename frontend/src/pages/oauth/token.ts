@@ -3,7 +3,7 @@ import type { APIRoute } from 'astro';
 export const prerender = false;
 
 const backendBaseUrl = (import.meta.env.BACKEND_URL || 'http://localhost:3000').replace(/\/$/, '');
-const tokenEndpoint = `${backendBaseUrl}/v1/oidc/token`;
+const tokenEndpoint = `${backendBaseUrl}/v1/oauth/token`;
 
 export const POST: APIRoute = async ({ request }) => {
   const contentType = request.headers.get('content-type') || 'application/json';

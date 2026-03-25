@@ -20,9 +20,9 @@ class ApplicationController < ActionController::API
 		@errors = errors if errors.present?
 
 		if errors.present?
-				render "shared/errors", status: status
+			render "shared/errors", status: status
 		else
-				render "shared/error", status: status
+			render "shared/error", status: status
 		end
 	end
 

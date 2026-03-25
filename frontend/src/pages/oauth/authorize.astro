@@ -25,17 +25,19 @@ import Layout from "../../layouts/Layout.astro";
     const response = await api.oauthAuthorize(sourceParams);
     const payload = response.data;
 
-    if (payload?.login_url) {
-      statusEl.textContent = "Redirecting to login...";
-      window.location.replace(payload.login_url);
-      return;
-    }
+    const shouldForcePromptLogin = payload?.reason === "prompt_login" || sourceParams.get("prompt") === "login";
+    const buildFrontendLoginUrl = () => {
+      const loginUrl = new URL("/login", window.location.origin);
+      loginUrl.searchParams.set("return_to", window.location.href);
+      if (shouldForcePromptLogin) {
+        loginUrl.searchParams.set("prompt", "login");
+      }
+      return loginUrl.toString();
+    };
 
     if (payload?.requires_login || response.error === "authentication_required") {
       statusEl.textContent = "Redirecting to login...";
-      const loginUrl = new URL("/login", window.location.origin);
-      loginUrl.searchParams.set("return_to", window.location.href);
-      window.location.replace(loginUrl.toString());
+      window.location.replace(buildFrontendLoginUrl());
       return;
     }
 

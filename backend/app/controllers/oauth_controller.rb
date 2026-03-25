@@ -32,17 +32,6 @@ class OauthController < ApplicationController
     render_error("Consent endpoint is not yet implemented", status: :not_implemented)
   end
 
-  def jwks
-    upstream_status, _upstream_headers, upstream_body = proxy_to_path("/oauth/discovery/keys", method: "GET")
-
-    begin
-      payload = JSON.parse(read_rack_body(upstream_body))
-      render json: payload, status: upstream_status
-    rescue JSON::ParserError
-      render_error("Invalid JWKS response", status: :bad_gateway)
-    end
-  end
-
   def token
     rejection = reject_non_confidential_client
     return if rejection
@@ -60,9 +49,13 @@ class OauthController < ApplicationController
   private
 
   def perform_authorize(oauth_params)
+    if prompt_forced_reauthentication?(oauth_params)
+      clear_access_token_cookie
+      return render json: { requires_login: true, reason: "prompt_login" }, status: :unauthorized
+    end
+
     if current_idp_user.nil?
-      login_url = with_query("#{frontend_base_url}/login", { return_to: frontend_authorize_url(oauth_params) })
-      return render json: { requires_login: true, login_url: login_url }, status: :unauthorized
+      return render json: { requires_login: true }, status: :unauthorized
     end
 
     upstream_status, upstream_headers, upstream_body = proxy_to_doorkeeper_authorize_endpoint(oauth_params)
@@ -77,8 +70,7 @@ class OauthController < ApplicationController
 
       if payload.is_a?(Hash)
         if payload["error"].to_s == "authentication_required"
-          login_url = with_query("#{frontend_base_url}/login", { return_to: frontend_authorize_url(oauth_params) })
-          return render json: { requires_login: true, login_url: login_url }, status: :unauthorized
+          return render json: { requires_login: true }, status: :unauthorized
         end
 
         redirect_url = payload["redirect_url"].presence || payload["redirect_uri"].presence || payload["location"].presence
@@ -142,14 +134,6 @@ class OauthController < ApplicationController
     params.to_unsafe_h.except("controller", "action", "format", "code_verifier")
   end
 
-  def frontend_base_url
-    (ENV["FRONTEND_URL"].presence || Rails.application.credentials.dig(:url, :frontend) || "http://localhost:4321").to_s.sub(%r{/\z}, "")
-  end
-
-  def frontend_authorize_url(oauth_params)
-    with_query("#{frontend_base_url}/oauth/authorize", oauth_params)
-  end
-
   def response_location(headers)
     return nil if headers.blank?
 
@@ -168,18 +152,8 @@ class OauthController < ApplicationController
     body.close if body.respond_to?(:close)
   end
 
-  def with_query(url, extra_params)
-    uri = URI.parse(url)
-    query = Rack::Utils.parse_nested_query(uri.query)
-
-    extra_params.each do |key, value|
-      next if value.blank?
-
-      query[key.to_s] = value
-    end
-
-    uri.query = query.to_query.presence
-    uri.to_s
+  def prompt_forced_reauthentication?(oauth_params)
+    oauth_params["prompt"].to_s.split.include?("login")
   end
 
   def reject_non_confidential_client

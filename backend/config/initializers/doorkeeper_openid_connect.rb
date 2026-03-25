@@ -59,7 +59,7 @@ Doorkeeper::OpenidConnect.configure do
       resource_owner.last_name
     end
 
-    normal_claim :preferred_username do |resource_owner|
+    normal_claim :username do |resource_owner|
       resource_owner.username
     end
 

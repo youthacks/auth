@@ -2,26 +2,81 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
+const env = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env || {};
+const backendBaseUrl = (env.BACKEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+const discoveryEndpoint = `${backendBaseUrl}/.well-known/openid-configuration`;
+
+const ENDPOINT_KEYS = [
+  'authorization_endpoint',
+  'token_endpoint',
+  'userinfo_endpoint',
+  'jwks_uri',
+  'end_session_endpoint',
+  'registration_endpoint',
+  'introspection_endpoint',
+  'revocation_endpoint',
+  'check_session_iframe',
+] as const;
+
+const rewriteEndpointOrigin = (value: unknown, targetOrigin: string): unknown => {
+  if (typeof value !== 'string' || value.length === 0) {
+    return value;
+  }
+
+  try {
+    const parsed = new URL(value);
+    return `${targetOrigin}${parsed.pathname}${parsed.search}`;
+  } catch {
+    return value;
+  }
+};
+
 export const GET: APIRoute = async ({ request }) => {
-  const configuredFrontend = (import.meta.env.FRONTEND_URL || '').replace(/\/$/, '');
-  const origin = configuredFrontend || new URL(request.url).origin;
+  const configuredFrontend = (env.FRONTEND_URL || '').replace(/\/$/, '');
+  const publicOrigin = configuredFrontend || new URL(request.url).origin;
 
-  const discovery = {
-    issuer: origin,
-    authorization_endpoint: `${origin}/oauth/authorize`,
-    token_endpoint: `${origin}/oauth/token`,
-    userinfo_endpoint: `${origin}/oauth/userinfo`,
-    jwks_uri: `${origin}/oauth/jwks`,
-    response_types_supported: ['code'],
-    grant_types_supported: ['authorization_code', 'refresh_token'],
-    subject_types_supported: ['public'],
-    id_token_signing_alg_values_supported: ['RS256'],
-    scopes_supported: ['openid', 'profile', 'email'],
-    token_endpoint_auth_methods_supported: ['client_secret_basic', 'client_secret_post'],
-    claims_supported: ['sub', 'name', 'given_name', 'family_name', 'preferred_username', 'email', 'auth_time', 'iss', 'aud', 'exp', 'iat'],
-  };
+  const upstream = await fetch(discoveryEndpoint, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+    },
+  });
 
-  return new Response(JSON.stringify(discovery), {
+  if (!upstream.ok) {
+    return new Response(JSON.stringify({
+      error: 'discovery_unavailable',
+      error_description: 'Could not load OpenID configuration from backend',
+    }), {
+      status: 502,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
+
+  let discovery: Record<string, unknown>;
+  try {
+    discovery = await upstream.json();
+  } catch {
+    return new Response(JSON.stringify({
+      error: 'invalid_discovery_response',
+      error_description: 'Backend discovery endpoint returned invalid JSON',
+    }), {
+      status: 502,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
+
+  const proxiedDiscovery: Record<string, unknown> = { ...discovery };
+  for (const key of ENDPOINT_KEYS) {
+    proxiedDiscovery[key] = rewriteEndpointOrigin(discovery[key], publicOrigin);
+  }
+
+  return new Response(JSON.stringify(proxiedDiscovery), {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
