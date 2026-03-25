@@ -5,9 +5,7 @@ Doorkeeper::OpenidConnect.configure do
     ENV['FRONTEND_URL'].presence || Rails.application.credentials.dig(:url, :frontend) || ENV['BACKEND_URL'].presence || Rails.application.credentials.dig(:url, :backend)
   end
 
-  signing_key OpenSSL::PKey::RSA.new(
-    Rails.application.credentials.dig(:doorkeeper, :oidc, :signing_key)
-  )
+  signing_key Rails.application.credentials.dig(:doorkeeper, :oidc, :signing_key)
 
   subject_types_supported [:public]
 
