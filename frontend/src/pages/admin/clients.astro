@@ -37,15 +37,16 @@ import Layout from "../../layouts/Layout.astro";
             </div>
 
             <div>
-              <label for="redirect_uri" class="text-sm font-semibold text-neutral-700">Redirect URI</label>
-              <input
-                id="redirect_uri"
-                name="redirect_uri"
-                type="url"
+              <label for="redirect_uris" class="text-sm font-semibold text-neutral-700">Redirect URIs</label>
+              <textarea
+                id="redirect_uris"
+                name="redirect_uris"
                 required
+                rows="4"
                 class="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none"
-                placeholder="https://example.com/oauth/callback"
-              />
+                placeholder="https://example.com/oauth/callback\nhttps://staging.example.com/oauth/callback"
+              ></textarea>
+              <p class="mt-2 text-xs text-neutral-500">Enter one callback URL per line.</p>
             </div>
 
             <button
@@ -75,7 +76,7 @@ import Layout from "../../layouts/Layout.astro";
                 <tr class="border-b border-neutral-200 text-xs uppercase tracking-wide text-neutral-500">
                   <th class="py-2 pr-4">Name</th>
                   <th class="py-2 pr-4">UID</th>
-                  <th class="py-2 pr-4">Redirect URI</th>
+                  <th class="py-2 pr-4">Redirect URIs</th>
                   <th class="py-2 pr-4">Scopes</th>
                   <th class="py-2 pr-4">Confidential</th>
                   <th class="py-2">Actions</th>
@@ -99,6 +100,7 @@ import Layout from "../../layouts/Layout.astro";
     name: string;
     uid: string;
     redirect_uri: string;
+    redirect_uris?: string[];
     scopes: string;
     confidential: boolean;
     created_at: string;
@@ -115,12 +117,28 @@ import Layout from "../../layouts/Layout.astro";
 
   const form = document.getElementById("client-form") as HTMLFormElement;
   const nameInput = document.getElementById("name") as HTMLInputElement;
-  const redirectInput = document.getElementById("redirect_uri") as HTMLInputElement;
+  const redirectInput = document.getElementById("redirect_uris") as HTMLTextAreaElement;
   const submitBtn = document.getElementById("submit-btn") as HTMLButtonElement;
   const formTitle = document.getElementById("form-title") as HTMLHeadingElement;
   const cancelEditBtn = document.getElementById("cancel-edit") as HTMLButtonElement;
 
   let editingId: number | null = null;
+
+  const parseRedirectUris = (raw: string) =>
+    raw
+      .split(/\r?\n/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+  const clientRedirectUris = (client: Client) => {
+    const parsed = Array.isArray(client.redirect_uris)
+      ? client.redirect_uris.map((value) => value.trim()).filter(Boolean)
+      : [];
+
+    if (parsed.length) return parsed;
+
+    return parseRedirectUris((client.redirect_uri || "").replace(/\s+/g, "\n"));
+  };
 
   const showStatus = (message: string, tone: "error" | "info" = "info") => {
     statusBox.textContent = message;
@@ -154,7 +172,7 @@ import Layout from "../../layouts/Layout.astro";
     submitBtn.textContent = "Save changes";
     cancelEditBtn.classList.remove("hidden");
     nameInput.value = client.name;
-    redirectInput.value = client.redirect_uri;
+    redirectInput.value = clientRedirectUris(client).join("\n");
   };
 
   const renderTable = (clients: Client[]) => {
@@ -174,7 +192,7 @@ import Layout from "../../layouts/Layout.astro";
 
       const redirectCell = document.createElement("td");
       redirectCell.className = "py-3 pr-4 text-neutral-600";
-      redirectCell.textContent = client.redirect_uri;
+      redirectCell.textContent = clientRedirectUris(client).join(", ");
 
       const scopesCell = document.createElement("td");
       scopesCell.className = "py-3 pr-4 text-neutral-600";
@@ -279,13 +297,15 @@ import Layout from "../../layouts/Layout.astro";
     event.preventDefault();
     clearStatus();
 
+    const redirectUris = parseRedirectUris(redirectInput.value);
+
     const payload = {
       name: nameInput.value.trim(),
-      redirect_uri: redirectInput.value.trim(),
+      redirect_uris: redirectUris,
     };
 
-    if (!payload.name || !payload.redirect_uri) {
-      showStatus("Name and redirect URI are required.", "error");
+    if (!payload.name || !payload.redirect_uris.length) {
+      showStatus("Name and at least one redirect URI are required.", "error");
       return;
     }
 

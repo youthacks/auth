@@ -224,7 +224,7 @@ class ApiClient {
 
   async createAdminClient(data: {
     name: string;
-    redirect_uri: string;
+    redirect_uris: string[];
   }) {
     return this.request('/v1/admin/clients', {
       method: 'POST',
@@ -236,7 +236,7 @@ class ApiClient {
     id: string | number,
     data: {
       name: string;
-      redirect_uri: string;
+      redirect_uris: string[];
     }
   ) {
     return this.request(`/v1/admin/clients/${id}`, {

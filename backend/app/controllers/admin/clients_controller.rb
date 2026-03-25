@@ -69,10 +69,25 @@ module Admin
     end
 
     def application_params
-      permitted = params.require(:application).permit(:name, :redirect_uri)
+      permitted = params.require(:application).permit(:name, :redirect_uri, redirect_uris: [])
+
+      redirect_uris = normalize_redirect_uris(permitted)
+      permitted[:redirect_uri] = redirect_uris.join("\n")
+      permitted.delete(:redirect_uris)
+
       permitted[:scopes] = DEFAULT_CLIENT_SCOPES
       permitted[:confidential] = true
       permitted
+    end
+
+    def normalize_redirect_uris(permitted)
+      from_array = Array(permitted.delete(:redirect_uris))
+      from_text = permitted[:redirect_uri].to_s.split(/\r?\n|\s+/)
+
+      (from_array + from_text)
+        .map { |value| value.to_s.strip }
+        .reject(&:blank?)
+        .uniq
     end
 
   end
