@@ -176,11 +176,17 @@ import Layout from "../layouts/Layout.astro";
       errorDiv.textContent = response.error || response.errors?.join(", ") || "Signup failed";
       errorDiv.classList.remove("hidden");
     } else {
+      const signupEmail = data.email.trim().toLowerCase();
       successDiv.textContent = "Verification code sent! Redirecting...";
       successDiv.classList.remove("hidden");
-      localStorage.setItem("signup_email", data.email);
+      localStorage.setItem("signup_email", signupEmail);
+      sessionStorage.setItem("signup_email", signupEmail);
+
+      const verifyUrl = new URL("/verify", window.location.origin);
+      verifyUrl.searchParams.set("email", signupEmail);
+
       setTimeout(() => {
-        window.location.href = "/verify";
+        window.location.href = verifyUrl.toString();
       }, 1500);
     }
   });

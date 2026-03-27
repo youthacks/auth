@@ -22,17 +22,17 @@ class EmailVerification < ApplicationRecord
       record = where(email: normalized_email).order(created_at: :desc).first
 
       if record
-        # window_start = record.sent_window_started_at || record.created_at || now
-        # if window_start <= SEND_WINDOW.ago
-        #   window_start = now
-        #   sent_count = 0
-        # else
-        #   sent_count = record.sent_count.to_i
-        # end
+        window_start = record.sent_window_started_at || record.created_at || now
+        if window_start <= SEND_WINDOW.ago
+          window_start = now
+          sent_count = 0
+        else
+          sent_count = record.sent_count.to_i
+        end
 
-        # if record.last_sent_at.present? && record.last_sent_at > MIN_SEND_INTERVAL.ago
-        #   return :rate_limited
-        # end
+        if record.last_sent_at.present? && record.last_sent_at > MIN_SEND_INTERVAL.ago
+          return :rate_limited
+        end
 
         if sent_count >= MAX_SENDS_PER_WINDOW
           return :rate_limited

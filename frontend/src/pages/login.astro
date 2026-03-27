@@ -73,6 +73,7 @@ import Layout from "../layouts/Layout.astro";
   import { api } from "../lib/api";
 
   const form = document.getElementById("login-form") as HTMLFormElement;
+  const identifierInput = document.getElementById("identifier") as HTMLInputElement;
   const errorDiv = document.getElementById("error") as HTMLDivElement;
   const successDiv = document.getElementById("success") as HTMLDivElement;
   const noticeDiv = document.getElementById("notice") as HTMLDivElement;
@@ -80,6 +81,11 @@ import Layout from "../layouts/Layout.astro";
 
   const urlParams = new URLSearchParams(window.location.search);
   const returnTo = urlParams.get("return_to");
+  const identifierFromUrl = urlParams.get("identifier")?.trim() || "";
+  const identifierFromStorage = localStorage.getItem("signup_email")?.trim() || "";
+  if (identifierFromUrl || identifierFromStorage) {
+    identifierInput.value = identifierFromUrl || identifierFromStorage;
+  }
   const prompt = urlParams.get("prompt");
   const forceLogin = prompt === "login";
 
@@ -126,7 +132,7 @@ import Layout from "../layouts/Layout.astro";
     noticeDiv.textContent = "Please reauthenticate to continue.";
     noticeDiv.classList.remove("hidden");
   } else if (returnTo && !normalizedReturnTo) {
-    noticeDiv.textContent = "Ignoring invalid OAuth return destination.";
+    noticeDiv.textContent = "Invalid OAuth return destination.";
     noticeDiv.classList.remove("hidden");
   }
 

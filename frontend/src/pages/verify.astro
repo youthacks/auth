@@ -75,18 +75,42 @@ import Layout from "../layouts/Layout.astro";
   const errorDiv = document.getElementById("error") as HTMLDivElement;
   const successDiv = document.getElementById("success") as HTMLDivElement;
   const resendBtn = document.getElementById("resend-btn") as HTMLButtonElement;
+  const codeInput = document.getElementById("code") as HTMLInputElement;
 
-  // Pre-fill email from localStorage if available
-  const signupEmail = localStorage.getItem("signup_email");
-  if (signupEmail) {
-    emailInput.value = signupEmail;
+  const normalizeEmail = (value: string | null) => value?.trim().toLowerCase() || "";
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const emailFromQuery = normalizeEmail(urlParams.get("email"));
+  const emailFromSession = normalizeEmail(sessionStorage.getItem("signup_email"));
+  const emailFromLocal = normalizeEmail(localStorage.getItem("signup_email"));
+  const fixedEmail = emailFromQuery || emailFromSession || emailFromLocal;
+
+  if (emailFromQuery) {
+    localStorage.setItem("signup_email", emailFromQuery);
+    sessionStorage.setItem("signup_email", emailFromQuery);
+  }
+
+  if (fixedEmail) {
+    emailInput.value = fixedEmail;
+    emailInput.readOnly = true;
+    emailInput.classList.add("bg-neutral-100", "text-neutral-600", "cursor-not-allowed");
+  } else {
+    emailInput.readOnly = true;
+    emailInput.classList.add("bg-neutral-100", "text-neutral-600", "cursor-not-allowed");
+    codeInput.disabled = true;
+    resendBtn.disabled = true;
+    errorDiv.textContent = "Missing signup email context. Please start again from sign up.";
+    errorDiv.classList.remove("hidden");
   }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    if (!fixedEmail) {
+      return;
+    }
+
     const formData = new FormData(form);
-    const email = formData.get("email") as string;
     const code = formData.get("code") as string;
 
     errorDiv.classList.add("hidden");
@@ -96,7 +120,7 @@ import Layout from "../layouts/Layout.astro";
     button.disabled = true;
     button.textContent = "Verifying...";
 
-    const response = await api.verifyEmail(email, code);
+    const response = await api.verifyEmail(fixedEmail, code.trim());
 
     button.disabled = false;
     button.textContent = "Verify email";
@@ -108,17 +132,20 @@ import Layout from "../layouts/Layout.astro";
       successDiv.textContent = "Email verified! Redirecting to login...";
       successDiv.classList.remove("hidden");
       localStorage.removeItem("signup_email");
+      sessionStorage.removeItem("signup_email");
+
+      const loginUrl = new URL("/login", window.location.origin);
+      loginUrl.searchParams.set("identifier", fixedEmail);
+
       setTimeout(() => {
-        window.location.href = "/login";
+        window.location.href = loginUrl.toString();
       }, 1500);
     }
   });
 
   resendBtn.addEventListener("click", async () => {
-    const email = emailInput.value;
-    
-    if (!email) {
-      errorDiv.textContent = "Please enter your email";
+    if (!fixedEmail) {
+      errorDiv.textContent = "Missing signup email context. Please start again from sign up.";
       errorDiv.classList.remove("hidden");
       return;
     }
@@ -129,7 +156,7 @@ import Layout from "../layouts/Layout.astro";
     resendBtn.disabled = true;
     resendBtn.textContent = "Sending...";
 
-    const response = await api.resendVerification(email);
+    const response = await api.resendVerification(fixedEmail);
 
     resendBtn.disabled = false;
     resendBtn.textContent = "Resend code";
