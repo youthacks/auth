@@ -93,7 +93,7 @@ class OauthController < ApplicationController
     proxy_to_path(path, method: "GET")
   end
 
-  def proxy_to_path(path, method: "GET", input: nil, content_type: nil)
+  def proxy_to_path(path, method: "GET", input: nil, content_type: nil, authorization: nil)
     env_options = {
       method: method,
       "HTTP_ACCEPT" => "application/json",
@@ -109,8 +109,12 @@ class OauthController < ApplicationController
       env_options
     )
 
-    token = bearer_token || oauth_handoff_token || cookie_token
-    env["HTTP_AUTHORIZATION"] = "Bearer #{token}" if token.present?
+    if authorization.present?
+      env["HTTP_AUTHORIZATION"] = authorization
+    else
+      token = bearer_token || oauth_handoff_token || cookie_token
+      env["HTTP_AUTHORIZATION"] = "Bearer #{token}" if token.present?
+    end
 
     Rails.application.call(env)
   end
@@ -122,7 +126,8 @@ class OauthController < ApplicationController
       "/oauth/token",
       method: "POST",
       input: body,
-      content_type: "application/x-www-form-urlencoded"
+      content_type: "application/x-www-form-urlencoded",
+      authorization: request.authorization
     )
   end
 

@@ -5,6 +5,7 @@ class ApplicationController < ActionController::API
 
 	before_action :force_json_format
 
+	rescue_from ActionDispatch::Http::Parameters::ParseError, with: :handle_parse_error
 	rescue_from StandardError, with: :handle_error
 
 	private
@@ -40,6 +41,11 @@ class ApplicationController < ActionController::API
 			"Server error. Please try again or contact us at hello@youthacks.org.",
 			status: :internal_server_error
 		)
+	end
+
+	def handle_parse_error(error)
+		Rails.logger.warn("Invalid request payload: #{error.class} - #{error.message}")
+		render_error("Invalid request payload", status: :bad_request)
 	end
 
 	def current_idp_user

@@ -7,3 +7,7 @@ Youthacks authentication system for hackathon tools.
 For the full production-oriented OAuth 2.0 + OpenID Connect flow, see:
 
 - [OAUTH_FLOW.md](OAUTH_FLOW.md)
+
+## Run this project myself???
+
+Deployment instructions coming out soon!

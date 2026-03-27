@@ -5,7 +5,7 @@ class EmailVerification < ApplicationRecord
   MAX_ATTEMPTS = 5
   MAX_SENDS_PER_WINDOW = 10
   SEND_WINDOW = 10.minutes
-  MIN_SEND_INTERVAL = 10.seconds
+  MIN_SEND_INTERVAL = 1.minute
 
   validates :email, :code_digest, :expires_at, :payload, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }
