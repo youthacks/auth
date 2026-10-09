@@ -43,3 +43,8 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Node
+/node_modules
+/app/assets/builds/*
+!/app/assets/builds/.keep

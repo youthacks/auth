@@ -1,0 +1,66 @@
+<% content_for :title, "Sign Up" %>
+<div class="flex items-center justify-center p-8">
+  <div class="w-full max-w-md">
+    <div class="rounded-xl border border-neutral-300 bg-white p-8 shadow-sm">
+      <h1 class="text-3xl font-bold">Create an account</h1>
+      <p class="mt-2 text-neutral-600">Get started with Youthacks</p>
+
+      <% if @user.errors.any? %>
+        <div role="alert" class="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+          <ul class="list-disc pl-5">
+            <% @user.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%= form_with model: @user, url: signup_path, class: "mt-6 space-y-4", data: { turbo: false } do |f| %>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <%= f.label :first_name, class: "block text-sm font-semibold text-neutral-700" %>
+            <%= f.text_field :first_name, required: true, autocomplete: "given-name", class: input_classes %>
+          </div>
+          <div>
+            <%= f.label :last_name, class: "block text-sm font-semibold text-neutral-700" %>
+            <%= f.text_field :last_name, required: true, autocomplete: "family-name", class: input_classes %>
+          </div>
+        </div>
+
+        <div>
+          <%= f.label :preferred_name, class: "block text-sm font-semibold text-neutral-700" do %>
+            Preferred Name <span class="text-neutral-500">(optional)</span>
+          <% end %>
+          <%= f.text_field :preferred_name, autocomplete: "nickname", class: input_classes %>
+        </div>
+
+        <div>
+          <%= f.label :username, class: "block text-sm font-semibold text-neutral-700" %>
+          <%= f.text_field :username, required: true, autocomplete: "username", class: input_classes %>
+        </div>
+
+        <div>
+          <%= f.label :email, class: "block text-sm font-semibold text-neutral-700" %>
+          <%= f.email_field :email, required: true, autocomplete: "email", class: input_classes %>
+        </div>
+
+        <div>
+          <%= f.label :password, class: "block text-sm font-semibold text-neutral-700" %>
+          <%= f.password_field :password, required: true, autocomplete: "new-password", class: input_classes %>
+        </div>
+
+        <div>
+          <%= f.label :password_confirmation, "Confirm Password", class: "block text-sm font-semibold text-neutral-700" %>
+          <%= f.password_field :password_confirmation, required: true, autocomplete: "new-password", class: input_classes %>
+        </div>
+
+        <%= f.submit "Create account", class: primary_button_classes, data: { disable_with: "Creating account..." } %>
+      <% end %>
+
+      <div class="mt-6 text-center text-sm text-neutral-600">
+        Already have an account?
+        <%= link_to "Sign in", login_path, class: "font-semibold text-red-800 underline-offset-2 transition hover:text-red-900 hover:underline" %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,44 +1,34 @@
 Rails.application.routes.draw do
-  use_doorkeeper
+  use_doorkeeper do
+    # Clients are managed through the admin UI, not Doorkeeper's own dashboard.
+    skip_controllers :applications, :authorized_applications
+  end
   use_doorkeeper_openid_connect
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
-  root to: "welcome#show"
+  # Compatibility alias for clients that hardcoded the old frontend's JWKS path.
+  get "oauth/jwks", to: "doorkeeper/openid_connect/discovery#keys"
+
+  root "home#show"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  scope "v1" do
+  get  "login",  to: "sessions#new"
+  post "login",  to: "sessions#create"
+  delete "logout", to: "sessions#destroy"
+  post "logout", to: "sessions#destroy"
 
-    scope "oauth" do
-      get "authorize", to: "oauth#authorize"
-      post "token", to: "oauth#token"
-    end
+  get  "signup", to: "registrations#new"
+  post "signup", to: "registrations#create"
 
-    scope "oidc" do
-      post "authorize/validate", to: "oauth#authorize_validate"
-      post "login", to: "auth#login"
-      post "consent", to: "oauth#consent"
-    end
+  get  "verify", to: "email_verifications#new"
+  post "verify", to: "email_verifications#create"
+  post "verify/resend", to: "email_verifications#resend", as: :resend_verification
 
-    scope "auth" do
+  get "dashboard", to: "dashboard#show"
 
-      post "signup", to: "auth#signup"
-      post "login", to: "auth#login"
-      post "refresh", to: "auth#refresh"
-      post "logout", to: "auth#logout"
-      post "forgot_password", to: "auth#forgot_password"
-      post "resend_email_verification", to: "auth#resend_email_verification"
-      post "verify_email", to: "auth#verify_email"
-      get "me", to: "users#show"
-    end
-
-    get "user", to: "users#show"
-
-    namespace :admin do
-      resources :clients, only: [:index, :show, :create, :update, :destroy]
-    end
+  namespace :admin do
+    resources :clients
   end
 
   # Catch-all for undefined routes

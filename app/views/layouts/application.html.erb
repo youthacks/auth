@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= page_title(content_for(:title)) %></title>
+    <meta name="description" content="<%= content_for(:description).presence || "Authentication for Youthacks events and services." %>">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
+  </head>
+  <body class="min-h-screen bg-neutral-50 text-neutral-900">
+    <%= render "shared/testing_banner" %>
+    <%= render "shared/header" %>
+    <%= render "shared/flash" %>
+    <%= yield %>
+  </body>
+</html>

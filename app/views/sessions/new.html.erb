@@ -1,0 +1,38 @@
+<% content_for :title, "Login" %>
+<div class="flex items-center justify-center p-8">
+  <div class="w-full max-w-md">
+    <div class="rounded-xl border border-neutral-300 bg-white p-8 shadow-sm">
+      <h1 class="text-3xl font-bold">Welcome back</h1>
+      <p class="mt-2 text-neutral-600">Sign in to your account</p>
+
+      <%= form_with url: login_path, method: :post, class: "mt-6 space-y-4", data: { turbo: false } do |f| %>
+        <%= hidden_field_tag :return_to, @return_to if @return_to %>
+        <%= hidden_field_tag :prompt, "login" if @reauthenticate %>
+
+        <div>
+          <%= f.label :identifier, "Email or Username", class: "block text-sm font-semibold text-neutral-700" %>
+          <%= f.text_field :identifier, value: @identifier, required: true, autofocus: @identifier.blank?, autocomplete: "username",
+                placeholder: "Enter your email or username", class: input_classes %>
+        </div>
+
+        <div>
+          <%= f.label :password, class: "block text-sm font-semibold text-neutral-700" %>
+          <%= f.password_field :password, required: true, autofocus: @identifier.present?, autocomplete: "current-password",
+                placeholder: "Enter your password", class: input_classes %>
+        </div>
+
+        <p class="text-sm text-neutral-500">
+          Forgot your password? Password reset isn't available yet; email
+          <a href="mailto:hello@youthacks.org" class="font-semibold text-red-800 hover:underline">hello@youthacks.org</a>.
+        </p>
+
+        <%= f.submit "Sign in", class: primary_button_classes, data: { disable_with: "Signing in..." } %>
+      <% end %>
+
+      <div class="mt-6 text-center text-sm text-neutral-600">
+        Don't have an account?
+        <%= link_to "Sign up", signup_path, class: "font-semibold text-red-800 underline-offset-2 transition hover:text-red-900 hover:underline" %>
+      </div>
+    </div>
+  </div>
+</div>

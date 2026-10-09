@@ -1,0 +1,11 @@
+<% { alert: "border-red-300 bg-red-50 text-red-800", notice: "border-green-300 bg-green-50 text-green-800" }.each do |key, classes| %>
+  <% if flash[key].present? %>
+    <div class="mx-auto mt-6 max-w-4xl px-8">
+      <div data-controller="flash" role="<%= key == :alert ? "alert" : "status" %>"
+           class="flex items-start justify-between gap-4 rounded-lg border p-3 text-sm <%= classes %>">
+        <span><%= flash[key] %></span>
+        <button type="button" data-action="flash#dismiss" class="font-bold leading-none opacity-70 hover:opacity-100" aria-label="Dismiss">&times;</button>
+      </div>
+    </div>
+  <% end %>
+<% end %>

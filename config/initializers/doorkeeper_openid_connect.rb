@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 Doorkeeper::OpenidConnect.configure do
-  issuer do |resource_owner, application|
-    ENV['FRONTEND_URL'].presence || Rails.application.credentials.dig(:url, :frontend) || ENV['BACKEND_URL'].presence || Rails.application.credentials.dig(:url, :backend)
+  issuer do |_resource_owner, _application|
+    Rails.configuration.x.app_url
   end
 
   signing_key Rails.application.credentials.dig(:doorkeeper, :oidc, :signing_key)
 
-  subject_types_supported [:public]
+  subject_types_supported [ :public ]
 
   resource_owner_from_access_token do |access_token|
     User.find_by(id: access_token.resource_owner_id)
@@ -17,52 +17,30 @@ Doorkeeper::OpenidConnect.configure do
     (resource_owner.last_login_at || resource_owner.created_at).to_i
   end
 
-  reauthenticate_resource_owner do |resource_owner, return_to|
-    false
+  # Called for `prompt=login` (and expired `max_age`). `return_to` is the
+  # authorize URL with `prompt=login` already removed, so sending the user back
+  # there after signing in completes the flow without looping.
+  reauthenticate_resource_owner do |_resource_owner, return_to|
+    sign_out
+    redirect_to login_path(return_to: return_to, prompt: "login")
   end
 
-  # Depending on your configuration, a DoubleRenderError could be raised
-  # if render/redirect_to is called at some point before this callback is executed.
-  # To avoid the DoubleRenderError, you could add these two lines at the beginning
-  #  of this callback: (Reference: https://github.com/rails/rails/issues/25106)
-  #   self.response_body = nil
-  #   @_response_body = nil
-  select_account_for_resource_owner do |resource_owner, return_to|
+  select_account_for_resource_owner do |_resource_owner, _return_to|
     true
   end
 
-  subject do |resource_owner, application|
+  subject do |resource_owner, _application|
     resource_owner.id.to_s
   end
 
-  # Protocol to use when generating URIs for the discovery endpoint,
-  # for example if you also use HTTPS in development
-  # protocol do
-  #   :https
-  # end
-
-  # Expiration time on or after which the ID Token MUST NOT be accepted for processing. (default 120 seconds).
-  # expiration 600
-
+  # Claims are returned both inside the ID token and from /oauth/userinfo,
+  # gated by the `profile` and `email` scopes.
   claims do
-    normal_claim :name do |resource_owner|
-      "#{resource_owner.first_name} #{resource_owner.last_name}".strip
-    end
-
-    normal_claim :given_name do |resource_owner|
-      resource_owner.first_name
-    end
-
-    normal_claim :family_name do |resource_owner|
-      resource_owner.last_name
-    end
-
-    normal_claim :username do |resource_owner|
-      resource_owner.username
-    end
-
-    normal_claim :email do |resource_owner|
-      resource_owner.email
-    end
+    in_both = %i[id_token user_info]
+    normal_claim(:name, response: in_both) { |resource_owner| resource_owner.full_name }
+    normal_claim(:given_name, response: in_both) { |resource_owner| resource_owner.first_name }
+    normal_claim(:family_name, response: in_both) { |resource_owner| resource_owner.last_name }
+    normal_claim(:username, response: in_both, scope: :profile) { |resource_owner| resource_owner.username }
+    normal_claim(:email, response: in_both) { |resource_owner| resource_owner.email }
   end
 end

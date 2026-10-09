@@ -6,30 +6,22 @@ require "rails/all"
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
-module Backend
+module YouthacksAuth
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.0
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
-    # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
-    # Configuration for the application, engines, and railties goes here.
-    #
-    # These settings can be overridden in specific environments using the files
-    # in config/environments, which are processed later.
-    #
-    # config.time_zone = "Central Time (US & Canada)"
-    # config.eager_load_paths << Rails.root.join("extras")
+    config.time_zone = "UTC"
 
-    # Only loads a smaller set of middleware suitable for API only apps.
-    # Middleware like session, flash, cookies can be added back manually.
-    # Skip views, helpers and assets when generating a new resource.
-    config.api_only = true
-
-    # Enable cookies for HttpOnly token storage in API mode.
-    config.middleware.use ActionDispatch::Cookies
+    # Public URL of this app (used for the OIDC issuer and mailer links).
+    config.x.app_url = (
+      ENV["APP_URL"].presence ||
+      ENV["FRONTEND_URL"].presence ||
+      (Rails.env.development? || Rails.env.test? ? "http://localhost:3000" : nil)
+    ).to_s.delete_suffix("/")
   end
 end

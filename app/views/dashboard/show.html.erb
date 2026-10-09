@@ -1,0 +1,47 @@
+<% content_for :title, "Dashboard" %>
+<div class="p-8">
+  <div class="mx-auto max-w-4xl">
+    <div class="rounded-xl border border-neutral-300 bg-white p-8 shadow-sm">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-3">
+            <h1 class="text-3xl font-bold">Dashboard</h1>
+            <% if current_user.admin? %>
+              <span class="rounded-md bg-yellow-400 px-3 py-1 text-sm font-bold text-black">ADMIN</span>
+            <% end %>
+          </div>
+          <p class="mt-2 text-neutral-600">Welcome back, <%= current_user.display_name %>!</p>
+        </div>
+        <%= button_to "Logout", logout_path, method: :delete,
+              class: "rounded-lg border border-neutral-300 px-4 py-2 font-semibold text-neutral-700 transition hover:bg-neutral-50" %>
+      </div>
+
+      <dl class="mt-8 grid grid-cols-1 gap-4 rounded-lg border border-neutral-200 bg-neutral-50 p-6 sm:grid-cols-2">
+        <div>
+          <dt class="text-sm font-semibold text-neutral-500">Name</dt>
+          <dd class="mt-1 text-lg"><%= current_user.full_name %></dd>
+        </div>
+        <div>
+          <dt class="text-sm font-semibold text-neutral-500">Username</dt>
+          <dd class="mt-1 text-lg"><%= current_user.username %></dd>
+        </div>
+        <div>
+          <dt class="text-sm font-semibold text-neutral-500">Email</dt>
+          <dd class="mt-1 text-lg"><%= current_user.email %></dd>
+        </div>
+        <% if current_user.preferred_name.present? %>
+          <div>
+            <dt class="text-sm font-semibold text-neutral-500">Preferred name</dt>
+            <dd class="mt-1 text-lg"><%= current_user.preferred_name %></dd>
+          </div>
+        <% end %>
+      </dl>
+
+      <% if current_user.admin? %>
+        <div class="mt-6">
+          <%= link_to "Manage OAuth clients →", admin_clients_path, class: "font-semibold text-red-800 hover:underline" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

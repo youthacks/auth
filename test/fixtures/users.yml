@@ -1,21 +1,17 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Password for every fixture user is "password123".
+alice:
+  first_name: Alice
+  last_name: Example
+  preferred_name: Ali
+  username: alice
+  email: alice@example.com
+  password_digest: <%= BCrypt::Password.create("password123", cost: 4) %>
+  admin: false
 
-one:
-  first_name: MyString
-  last_name: MyString
-  preferred_name: MyString
-  username: mystring_one
-  email: user_one@example.com
-  password_digest: MyString
-  last_login_at: 2026-01-16 14:30:13
-  locked_at: 2026-01-16 14:30:13
-
-two:
-  first_name: MyString
-  last_name: MyString
-  preferred_name: MyString
-  username: mystring_two
-  email: user_two@example.com
-  password_digest: MyString
-  last_login_at: 2026-01-16 14:30:13
-  locked_at: 2026-01-16 14:30:13
+admin:
+  first_name: Ada
+  last_name: Admin
+  username: admin
+  email: admin@example.com
+  password_digest: <%= BCrypt::Password.create("password123", cost: 4) %>
+  admin: true

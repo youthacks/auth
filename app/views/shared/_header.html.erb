@@ -1,0 +1,17 @@
+<header class="border-b border-neutral-300 bg-white">
+  <div class="mx-auto flex h-18 max-w-7xl items-center justify-between px-8">
+    <%= link_to "Youthacks", root_path, class: "text-xl font-bold" %>
+    <nav class="flex items-center gap-4 text-sm font-semibold">
+      <% if signed_in? %>
+        <%= link_to "Dashboard", dashboard_path, class: "text-neutral-700 hover:text-neutral-900" %>
+        <% if current_user.admin? %>
+          <%= link_to "Clients", admin_clients_path, class: "text-neutral-700 hover:text-neutral-900" %>
+        <% end %>
+        <%= button_to "Sign out", logout_path, method: :delete, class: "rounded-lg border border-neutral-300 px-3 py-1.5 text-neutral-700 transition hover:bg-neutral-50" %>
+      <% else %>
+        <%= link_to "Sign in", login_path, class: "text-neutral-700 hover:text-neutral-900" %>
+        <%= link_to "Create account", signup_path, class: "rounded-lg bg-red-800 px-3 py-1.5 text-white transition hover:bg-red-900" %>
+      <% end %>
+    </nav>
+  </div>
+</header>

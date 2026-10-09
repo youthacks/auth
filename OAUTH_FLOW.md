@@ -2,6 +2,8 @@
 
 Use OpenID Connect (OIDC) to sign SPS users in with Youthacks Auth.
 
+All endpoints below are served by this Rails app; `https://auth.youthacks.org` is the issuer. Register clients at `/admin/clients` (admins only).
+
 
 ## TL;DR
 
@@ -102,7 +104,7 @@ Example response:
 }
 ```
 
-Note: This public endpoint accepts JSON from SPS and relays internally.
+Note: The token endpoint accepts either JSON or form-encoded bodies, and client credentials may also be sent via HTTP Basic auth.
 
 ## Validate the ID token
 

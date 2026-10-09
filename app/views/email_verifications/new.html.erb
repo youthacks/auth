@@ -1,0 +1,35 @@
+<% content_for :title, "Verify Email" %>
+<div class="flex items-center justify-center p-8">
+  <div class="w-full max-w-md">
+    <div class="rounded-xl border border-neutral-300 bg-white p-8 shadow-sm">
+      <h1 class="text-3xl font-bold">Verify your email</h1>
+      <p class="mt-2 text-neutral-600">Enter the code sent to your email</p>
+
+      <%= form_with url: verify_path, method: :post, class: "mt-6 space-y-4", data: { turbo: false } do |f| %>
+        <div>
+          <%= f.label :email, class: "block text-sm font-semibold text-neutral-700" %>
+          <%= f.email_field :email, value: @email, required: true, readonly: @email.present?, autocomplete: "email",
+                class: input_classes(@email.present? ? "cursor-not-allowed bg-neutral-100 text-neutral-600" : nil) %>
+        </div>
+
+        <div>
+          <%= f.label :code, "Verification Code", class: "block text-sm font-semibold text-neutral-700" %>
+          <%= f.text_field :code, required: true, maxlength: 6, inputmode: "numeric", pattern: "[0-9]{6}", autofocus: true,
+                autocomplete: "one-time-code", placeholder: "000000", disabled: @email.blank?,
+                class: input_classes("font-mono text-lg tracking-wider") %>
+        </div>
+
+        <%= f.submit "Verify email", class: primary_button_classes, disabled: @email.blank?, data: { disable_with: "Verifying..." } %>
+      <% end %>
+
+      <%= form_with url: resend_verification_path, method: :post, class: "mt-4", data: { turbo: false } do |f| %>
+        <%= f.hidden_field :email, value: @email %>
+        <%= f.submit "Resend code", class: secondary_button_classes, disabled: @email.blank?, data: { disable_with: "Sending..." } %>
+      <% end %>
+
+      <div class="mt-6 text-center text-sm text-neutral-600">
+        <%= link_to "Back to login", login_path, class: "font-semibold text-red-800 underline-offset-2 transition hover:text-red-900 hover:underline" %>
+      </div>
+    </div>
+  </div>
+</div>

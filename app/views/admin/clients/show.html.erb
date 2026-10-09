@@ -1,0 +1,51 @@
+<% content_for :title, @client.name %>
+<section class="mx-auto max-w-2xl px-6 py-12">
+  <p class="text-xs font-semibold uppercase tracking-widest text-red-700">Admin</p>
+  <h1 class="mt-2 text-3xl font-semibold text-neutral-900"><%= @client.name %></h1>
+
+  <% if @client_secret.present? %>
+    <div data-controller="clipboard" class="mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
+      <p class="font-semibold">Save this client secret now. It will not be shown again.</p>
+      <div class="mt-2 flex items-center gap-3">
+        <code data-clipboard-target="source" class="break-all rounded bg-white px-2 py-1 font-mono text-sm"><%= @client_secret %></code>
+        <button type="button" data-clipboard-target="button" data-action="clipboard#copy"
+                class="shrink-0 rounded-lg border border-amber-300 px-3 py-1 text-sm font-semibold hover:bg-amber-100">Copy</button>
+      </div>
+    </div>
+  <% end %>
+
+  <dl class="mt-6 space-y-4 rounded-xl border border-neutral-200 bg-white p-6 text-sm shadow-sm">
+    <div>
+      <dt class="font-semibold text-neutral-500">Client ID</dt>
+      <dd data-controller="clipboard" class="mt-1 flex items-center gap-3">
+        <code data-clipboard-target="source" class="break-all font-mono"><%= @client.uid %></code>
+        <button type="button" data-clipboard-target="button" data-action="clipboard#copy" class="shrink-0 text-xs font-semibold text-red-700 hover:underline">Copy</button>
+      </dd>
+    </div>
+    <div>
+      <dt class="font-semibold text-neutral-500">Redirect URIs</dt>
+      <dd class="mt-1 space-y-1">
+        <% redirect_uris_for(@client).each do |uri| %>
+          <div class="break-all font-mono text-xs"><%= uri %></div>
+        <% end %>
+      </dd>
+    </div>
+    <div>
+      <dt class="font-semibold text-neutral-500">Scopes</dt>
+      <dd class="mt-1"><%= @client.scopes.to_s %></dd>
+    </div>
+    <div>
+      <dt class="font-semibold text-neutral-500">Confidential</dt>
+      <dd class="mt-1"><%= @client.confidential? ? "Yes" : "No" %></dd>
+    </div>
+    <div>
+      <dt class="font-semibold text-neutral-500">Created</dt>
+      <dd class="mt-1"><%= @client.created_at %></dd>
+    </div>
+  </dl>
+
+  <div class="mt-6 flex items-center gap-4 text-sm font-semibold">
+    <%= link_to "Edit", edit_admin_client_path(@client), class: "text-red-700 hover:text-red-800" %>
+    <%= link_to "All clients", admin_clients_path, class: "text-neutral-600 hover:text-neutral-900" %>
+  </div>
+</section>

@@ -9,6 +9,6 @@ class CreateSamlConsents < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :saml_consents, [:user_id, :issuer], unique: true
+    add_index :saml_consents, [ :user_id, :issuer ], unique: true
   end
 end

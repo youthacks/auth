@@ -4,6 +4,7 @@ class User < ApplicationRecord
 
   has_secure_password
 
+  has_many :access_tokens, dependent: :destroy
 
   validates :first_name, :last_name, :username, :email, presence: true
   validates :email, :username, uniqueness: true
@@ -11,8 +12,20 @@ class User < ApplicationRecord
 
   before_validation :normalize_identity
 
+  # Look a user up by email or username (both stored lower-cased).
+  def self.find_by_identifier(identifier)
+    value = identifier.to_s.strip.downcase
+    return nil if value.blank?
+
+    value.match?(URI::MailTo::EMAIL_REGEXP) ? find_by(email: value) : find_by(username: value)
+  end
+
   def display_name
     preferred_name.presence || first_name
+  end
+
+  def full_name
+    "#{first_name} #{last_name}".strip
   end
 
   def locked?

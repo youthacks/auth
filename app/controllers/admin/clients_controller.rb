@@ -1,94 +1,66 @@
 module Admin
   class ClientsController < ApplicationController
-    DEFAULT_CLIENT_SCOPES = Doorkeeper.configuration.default_scopes.to_s.freeze
-
     before_action :require_admin!
-    before_action :set_application, only: [:show, :update, :destroy]
+    before_action :set_client, only: [ :show, :edit, :update, :destroy ]
 
     def index
-      @clients = Doorkeeper::Application.all.order(created_at: :desc)
-      render :index, status: :ok
+      @clients = Doorkeeper::Application.order(created_at: :desc)
     end
 
     def show
-      @client = @app
-      render :show, status: :ok
+      # A freshly created client's secret is shown exactly once, via flash.
+      @client_secret = flash[:client_secret]
+    end
+
+    def new
+      @client = Doorkeeper::Application.new
     end
 
     def create
-      app = Doorkeeper::Application.new(application_params)
-      if app.save
-        @message = "Client created"
-        @client = app
-        @client_secret = app.secret
-        render :create, status: :created
+      @client = Doorkeeper::Application.new(client_params)
+
+      if @client.save
+        flash[:client_secret] = @client.plaintext_secret
+        redirect_to admin_client_path(@client), notice: "Client created."
       else
-        render_error("Validation failed", status: :unprocessable_entity, errors: app.errors.full_messages)
+        render :new, status: :unprocessable_entity
       end
     end
 
+    def edit
+    end
+
     def update
-      if @app.update(application_params)
-        @message = "Client updated"
-        @client = @app
-        render :update, status: :ok
+      if @client.update(client_params)
+        redirect_to admin_client_path(@client), notice: "Client updated."
       else
-        render_error("Validation failed", status: :unprocessable_entity, errors: @app.errors.full_messages)
+        render :edit, status: :unprocessable_entity
       end
     end
 
     def destroy
-      if @app.destroy
-        @message = "Client deleted"
-        render :destroy, status: :ok
-      else
-        render_error("Validation failed", status: :unprocessable_entity, errors: @app.errors.full_messages)
-      end
+      @client.destroy
+      redirect_to admin_clients_path, notice: "Client deleted.", status: :see_other
     end
 
     private
 
-    def require_admin!
-      user = current_idp_user
-      if user.nil?
-        render_error("User not found or not authenticated", status: :unauthorized)
-        return
-      end
-
-      return if user.admin?
-
-      render_error("Forbidden", status: :forbidden)
-      return
-    end
-
-    def set_application
-      @app = Doorkeeper::Application.find(params[:id])
+    def set_client
+      @client = Doorkeeper::Application.find(params[:id])
     rescue ActiveRecord::RecordNotFound
-      render_error("Application not found", status: :not_found)
-      nil
+      redirect_to admin_clients_path, alert: "Client not found."
     end
 
-    def application_params
-      permitted = params.require(:application).permit(:name, :redirect_uri, redirect_uris: [])
-
-      redirect_uris = normalize_redirect_uris(permitted)
-      permitted[:redirect_uri] = redirect_uris.join("\n")
-      permitted.delete(:redirect_uris)
-
-      permitted[:scopes] = DEFAULT_CLIENT_SCOPES
+    def client_params
+      permitted = params.require(:client).permit(:name, :redirect_uri)
+      permitted[:redirect_uri] = normalize_redirect_uris(permitted[:redirect_uri]).join("\n")
+      permitted[:scopes] = Doorkeeper.configuration.default_scopes.to_s
       permitted[:confidential] = true
       permitted
     end
 
-    def normalize_redirect_uris(permitted)
-      from_array = Array(permitted.delete(:redirect_uris))
-      from_text = permitted[:redirect_uri].to_s.split(/\r?\n|\s+/)
-
-      (from_array + from_text)
-        .map { |value| value.to_s.strip }
-        .reject(&:blank?)
-        .uniq
+    def normalize_redirect_uris(raw)
+      raw.to_s.split(/\r?\n|\s+/).map(&:strip).reject(&:blank?).uniq
     end
-
   end
 end
