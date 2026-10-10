@@ -1,11 +1,9 @@
 # Youthacks Auth
 
-Youthacks authentication system for hackathon tools: a single Ruby on Rails app that
-handles sign-up with email verification, sign-in, and acts as an OAuth 2.0 / OpenID
-Connect provider for other Youthacks services.
+Youthacks authentication system for hackathon tools.
 
 - Rails 8 with server-rendered views (Hotwire Turbo + Stimulus for the little JS there is)
-- JavaScript bundled with **esbuild**, CSS built with **Tailwind CSS v4**, both run through npm
+- JavaScript bundled with **esbuild**, CSS built with **Tailwind CSS v4**, both run through Yarn
   and served by Propshaft
 - PostgreSQL, Doorkeeper + doorkeeper-openid_connect for OAuth/OIDC
 
@@ -15,22 +13,14 @@ For the full OAuth 2.0 + OpenID Connect flow for integrating apps, see [OAUTH_FL
 
 ## Running locally
 
-Requirements: Ruby (see `.ruby-version`), Node.js 20+, PostgreSQL.
+Requirements: Ruby (see `.ruby-version`), Node.js (see `.node-version`) with Yarn, PostgreSQL.
 
 ```sh
 bundle install
-npm install
+yarn install
 cp .env.example .env   # then edit DATABASE_URL etc.
 bin/rails db:prepare
 bin/dev                # Rails server + esbuild + Tailwind watchers on http://localhost:3000
-```
-
-`bin/dev` uses `foreman` to run the three processes in `Procfile.dev`. To run just the
-server after a one-off asset build:
-
-```sh
-npm run build && npm run build:css
-bin/rails server
 ```
 
 ### Environment variables
