@@ -28,7 +28,7 @@ development:
   # To create additional roles in PostgreSQL see `$ createuser --help`.
   # When left blank, PostgreSQL will use the default role. This is
   # the same name as the operating system user running Rails.
-  #username: backend
+  #username: auth
 
   # The password associated with the PostgreSQL role (username).
   #password:
@@ -57,8 +57,9 @@ development:
 test:
   <<: *default
   <%# .env sets DATABASE_URL for development; point tests at a sibling database on the same server. %>
+  <%# Swap the database name to auth_test, preserving host/credentials/query and tolerating a URL with no database path (e.g. CI). %>
   <% if ENV["DATABASE_URL"].present? %>
-  url: <%= ENV["DATABASE_URL"].sub(%r{/[^/?]+(\?|\z)}, '/auth_test\1') %>
+  url: <%= require "uri"; _u = URI.parse(ENV["DATABASE_URL"]); _u.path = "/auth_test"; _u.to_s %>
   <% else %>
   database: auth_test
   <% end %>
