@@ -5,7 +5,11 @@ Doorkeeper::OpenidConnect.configure do
     Rails.configuration.x.app_url
   end
 
-  signing_key Rails.application.credentials.dig(:doorkeeper, :oidc, :signing_key)
+  signing_key(
+    Rails.application.credentials.dig(:doorkeeper, :oidc, :signing_key) ||
+    ENV["OIDC_SIGNING_KEY"].presence ||
+    (OpenSSL::PKey::RSA.new(2048).to_pem if Rails.env.test?)
+  )
 
   subject_types_supported [ :public ]
 
