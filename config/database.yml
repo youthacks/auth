@@ -22,7 +22,7 @@ default: &default
 
 development:
   <<: *default
-  database: backend_development
+  database: auth_development
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
@@ -58,9 +58,9 @@ test:
   <<: *default
   <%# .env sets DATABASE_URL for development; point tests at a sibling database on the same server. %>
   <% if ENV["DATABASE_URL"].present? %>
-  url: <%= ENV["DATABASE_URL"].sub(%r{/[^/?]+(\?|\z)}, '/backend_test\1') %>
+  url: <%= ENV["DATABASE_URL"].sub(%r{/[^/?]+(\?|\z)}, '/auth_test\1') %>
   <% else %>
-  database: backend_test
+  database: auth_test
   <% end %>
 
 # As with config/credentials.yml, you never want to store sensitive information,
@@ -89,13 +89,13 @@ production:
     url: <%= ENV["DATABASE_URL"] %>
   cache:
     <<: *primary_production
-    database: backend_production_cache
+    database: auth_production_cache
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: backend_production_queue
+    database: auth_production_queue
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: backend_production_cable
+    database: auth_production_cable
     migrations_paths: db/cable_migrate
