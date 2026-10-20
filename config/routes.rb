@@ -1,8 +1,5 @@
 Rails.application.routes.draw do
-  use_doorkeeper do
-    # Clients are managed through the admin UI, not Doorkeeper's own dashboard.
-    skip_controllers :applications, :authorized_applications
-  end
+  use_doorkeeper
   use_doorkeeper_openid_connect
 
   # Compatibility alias for clients that hardcoded the old frontend's JWKS path.
@@ -26,10 +23,6 @@ Rails.application.routes.draw do
   post "verify/resend", to: "email_verifications#resend", as: :resend_verification
 
   get "dashboard", to: "dashboard#show"
-
-  namespace :admin do
-    resources :clients
-  end
 
   # Catch-all for undefined routes
   match "*path", to: "errors#not_found", via: :all

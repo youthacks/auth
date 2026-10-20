@@ -28,13 +28,6 @@ module Authentication
     redirect_to login_path(return_to: request.fullpath), alert: "Please sign in to continue."
   end
 
-  def require_admin!
-    require_user!
-    return if performed? || current_user.admin?
-
-    redirect_to dashboard_path, alert: "You do not have access to that admin page."
-  end
-
   def sign_in(user)
     user.update!(last_login_at: Time.current)
     raw_token = AccessToken.issue_for(user, request)

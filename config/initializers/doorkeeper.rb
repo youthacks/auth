@@ -9,6 +9,12 @@ Doorkeeper.configure do
     current_user || redirect_to(login_path(return_to: request.fullpath))
   end
 
+  # Only admins may manage OAuth clients via Doorkeeper's own applications controller.
+  admin_authenticator do
+    current_user || redirect_to(login_path(return_to: request.fullpath))
+    redirect_to(dashboard_path, alert: "You do not have access to that admin page.") unless current_user&.admin?
+  end
+
   base_controller "ApplicationController"
 
   access_token_expires_in 15.minutes

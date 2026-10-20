@@ -39,7 +39,7 @@
 
       <% if current_user.admin? %>
         <div class="mt-6">
-          <%= link_to "Manage OAuth clients →", admin_clients_path, class: "font-semibold text-red-800 hover:underline" %>
+          <%= link_to "Manage OAuth clients →", oauth_applications_path, class: "font-semibold text-red-800 hover:underline" %>
         </div>
       <% end %>
     </div>

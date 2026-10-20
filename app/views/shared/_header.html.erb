@@ -5,7 +5,7 @@
       <% if signed_in? %>
         <%= link_to "Dashboard", dashboard_path, class: "text-neutral-700 hover:text-neutral-900" %>
         <% if current_user.admin? %>
-          <%= link_to "Clients", admin_clients_path, class: "text-neutral-700 hover:text-neutral-900" %>
+          <%= link_to "Clients", oauth_applications_path, class: "text-neutral-700 hover:text-neutral-900" %>
         <% end %>
         <%= button_to "Sign out", logout_path, method: :delete, class: "rounded-lg border border-neutral-300 px-3 py-1.5 text-neutral-700 transition hover:bg-neutral-50" %>
       <% else %>
