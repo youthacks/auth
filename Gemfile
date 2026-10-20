@@ -21,7 +21,7 @@ gem "solid_cable"
 gem "bootsnap", require: false
 gem "kamal", require: false
 gem "thruster", require: false
-gem "dotenv-rails"
+gem "dotenv-rails", groups: [:development, :test]
 
 gem "jwt"
 gem "doorkeeper"
