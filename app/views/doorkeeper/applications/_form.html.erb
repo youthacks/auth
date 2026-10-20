@@ -1,0 +1,35 @@
+<%= form_for application, url: doorkeeper_submit_path(application), as: :doorkeeper_application do |f| %>
+  <% if application.errors.any? %>
+    <div class="mb-6 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-800">
+      <%= t(".error") %>
+    </div>
+  <% end %>
+
+  <div class="space-y-6">
+    <div>
+      <%= f.label :name, class: "block text-sm font-semibold text-neutral-700" %>
+      <%= f.text_field :name, required: true,
+            class: "mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 focus:border-red-800 focus:outline-none focus:ring-1 focus:ring-red-800" %>
+      <%= doorkeeper_errors_for application, :name %>
+    </div>
+
+    <div>
+      <%= f.label :redirect_uri, class: "block text-sm font-semibold text-neutral-700" %>
+      <%= f.text_area :redirect_uri, rows: 3,
+            class: "mt-1 block w-full rounded-lg border border-neutral-300 px-3 py-2 font-mono text-sm focus:border-red-800 focus:outline-none focus:ring-1 focus:ring-red-800" %>
+      <%= doorkeeper_errors_for application, :redirect_uri %>
+      <p class="mt-1 text-sm text-neutral-500"><%= t("doorkeeper.applications.help.redirect_uri") %></p>
+    </div>
+
+    <%# Clients are always confidential with the app's default scopes; not user-editable. %>
+    <%= f.hidden_field :confidential, value: true %>
+    <%= f.hidden_field :scopes, value: Doorkeeper.configuration.default_scopes.to_s %>
+
+    <div class="flex items-center gap-3">
+      <%= f.submit t("doorkeeper.applications.buttons.submit"),
+            class: "rounded-lg bg-red-800 px-4 py-2 font-semibold text-white transition hover:bg-red-900" %>
+      <%= link_to t("doorkeeper.applications.buttons.cancel"), oauth_applications_path,
+            class: "rounded-lg border border-neutral-300 px-4 py-2 font-semibold text-neutral-700 transition hover:bg-neutral-50" %>
+    </div>
+  </div>
+<% end %>

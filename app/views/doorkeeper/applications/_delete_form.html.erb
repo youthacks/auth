@@ -1,0 +1,6 @@
+<%- submit_btn_css ||= "rounded-lg border border-neutral-300 px-3 py-1.5 text-sm font-semibold text-neutral-700 transition hover:bg-neutral-50" %>
+<%= form_tag oauth_application_path(application), method: :delete do %>
+  <%= submit_tag t("doorkeeper.applications.buttons.destroy"),
+                 onclick: "return confirm('#{ t('doorkeeper.applications.confirmations.destroy') }')",
+                 class: submit_btn_css %>
+<% end %>

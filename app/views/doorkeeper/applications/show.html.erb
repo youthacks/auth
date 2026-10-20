@@ -1,0 +1,63 @@
+<div class="p-8">
+  <div class="mx-auto max-w-3xl">
+    <div class="rounded-xl border border-neutral-300 bg-white p-8 shadow-sm">
+      <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold"><%= t(".title", name: @application.name) %></h1>
+        <div class="flex items-center gap-3">
+          <%= link_to t("doorkeeper.applications.buttons.edit"), edit_oauth_application_path(@application),
+                class: "rounded-lg border border-neutral-300 px-4 py-2 font-semibold text-neutral-700 transition hover:bg-neutral-50" %>
+          <%= render "delete_form", application: @application,
+                submit_btn_css: "rounded-lg border border-red-300 px-4 py-2 font-semibold text-red-700 transition hover:bg-red-50" %>
+        </div>
+      </div>
+
+      <dl class="mt-8 grid grid-cols-1 gap-4 rounded-lg border border-neutral-200 bg-neutral-50 p-6 sm:grid-cols-2">
+        <div>
+          <dt class="text-sm font-semibold text-neutral-500"><%= t(".application_id") %></dt>
+          <dd class="mt-1 font-mono text-sm" id="application_id"><%= @application.uid %></dd>
+        </div>
+
+        <div>
+          <dt class="text-sm font-semibold text-neutral-500"><%= t(".secret") %></dt>
+          <dd class="mt-1 font-mono text-sm" id="secret">
+            <% secret = flash[:application_secret].presence || @application.plaintext_secret %>
+            <% if secret.blank? && Doorkeeper.config.application_secret_hashed? %>
+              <span class="italic uppercase text-neutral-400"><%= t(".secret_hashed") %></span>
+            <% else %>
+              <%= secret %>
+            <% end %>
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm font-semibold text-neutral-500"><%= t(".scopes") %></dt>
+          <dd class="mt-1 font-mono text-sm" id="scopes">
+            <% if @application.scopes.present? %>
+              <%= @application.scopes %>
+            <% else %>
+              <span class="italic uppercase text-neutral-400"><%= t(".not_defined") %></span>
+            <% end %>
+          </dd>
+        </div>
+
+        <div>
+          <dt class="text-sm font-semibold text-neutral-500"><%= t(".confidential") %></dt>
+          <dd class="mt-1 text-sm" id="confidential"><%= @application.confidential? %></dd>
+        </div>
+      </dl>
+
+      <div class="mt-8">
+        <h2 class="text-sm font-semibold text-neutral-500"><%= t(".callback_urls") %></h2>
+        <% if @application.redirect_uri.present? %>
+          <ul class="mt-2 space-y-1">
+            <% @application.redirect_uri.split.each do |uri| %>
+              <li class="font-mono text-sm text-neutral-700"><%= uri %></li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="mt-2 text-sm italic uppercase text-neutral-400"><%= t(".not_defined") %></p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
