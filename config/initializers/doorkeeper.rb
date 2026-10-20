@@ -11,10 +11,8 @@ Doorkeeper.configure do
 
   # Only admins may manage OAuth clients via Doorkeeper's own applications controller.
   admin_authenticator do
-    if current_user.nil?
-      redirect_to login_path(return_to: request.fullpath)
-    elsif !current_user.admin?
-      redirect_to dashboard_path, alert: "You do not have access to that admin page."
+    unless current_user&.admin?
+      redirect_to root_path
     end
   end
 
